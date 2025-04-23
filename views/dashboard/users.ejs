@@ -19,7 +19,7 @@
       </thead>
       <tbody>
         <% users.forEach(user => { %>
-          <tr onclick="window.location.href='/dashboard/users/<%= user.id %>'" style="cursor: pointer;">
+          <tr onclick="window.location.href='/dashboard/users/<%= user.id_usuario %>'" style="cursor: pointer;">
             <td><%= user.userName %></td>
             <td><%= user.email %></td>
             <td><%= user.country %></td>

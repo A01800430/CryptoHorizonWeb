@@ -30,10 +30,10 @@ const ipAddress = process.env.C9_HOSTNAME ?? 'localhost';
 // Conexión a MySQL
 async function getDBConnection() {
     return await mysql.createConnection({
-        host: "databaseunity.c53ikkaxvzot.us-east-1.rds.amazonaws.com",//process.env.MYSQL_HOST,
-        user: "admin",//process.env.MYSQL_USER,
-        password: "moises123",//process.env.MYSQL_PASSWORD,
-        database: "databaseunity",
+        host: "bd-desarrollo-web.cccvcrwag86o.us-east-1.rds.amazonaws.com",
+        user: "admin",
+        password: "&j4w:)bN6Rcq2xL",
+        database: "Cryptohorizon",
         waitForConnections: true
     });
 }
@@ -56,7 +56,7 @@ app.post("/loginUser", async (req, res) => {
         connection = await getDBConnection();
 
         const [result] = await connection.execute(
-            "SELECT id, userName, password FROM usuarios WHERE userName = ?",
+            "SELECT id_usuario, userName, password FROM Usuario WHERE userName = ?",
             [username]
         );
 
@@ -99,7 +99,7 @@ app.post("/createUser", async (req, res) => {
         connection = await getDBConnection();
 
         const [userCheck] = await connection.execute(
-            "SELECT * FROM usuarios WHERE userName = ?",
+            "SELECT * FROM Usuario WHERE userName = ?",
             [username]
         );
         if (userCheck.length > 0) {
@@ -107,7 +107,7 @@ app.post("/createUser", async (req, res) => {
         }
 
         const [emailCheck] = await connection.execute(
-            "SELECT * FROM usuarios WHERE email = ?",
+            "SELECT * FROM Usuario WHERE email = ?",
             [email]
         );
         if (emailCheck.length > 0) {
@@ -115,7 +115,7 @@ app.post("/createUser", async (req, res) => {
         }
 
         const insertSQL = `
-            INSERT INTO usuarios
+            INSERT INTO Usuario
             (userName, email, password, birthDate, gender, country, deviceModel, operatingSystem, platform, systemLanguage)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
@@ -174,9 +174,9 @@ app.post("/register", async (req, res) => {
 
 // ==================== ✅ GUARDAR SESIÓN ====================
 app.post("/saveSession", async (req, res) => {
-    const { userId, startTime, endTime } = req.body;
+    const { id_usuario, startTime, endTime } = req.body;
 
-    if (!userId || !startTime || !endTime) {
+    if (!id_usuario || !startTime || !endTime) {
         return res.json({ done: false, message: "Datos incompletos" });
     }
 
@@ -193,13 +193,13 @@ app.post("/saveSession", async (req, res) => {
     try {
         connection = await getDBConnection();
         const sql = `
-            INSERT INTO sesiones (userId, startTime, endTime, duration_seconds)
+            INSERT INTO Sesion (id_usuario, startTime, endTime, duration_seconds)
             VALUES (?, ?, ?, ?)
         `;
 
-        await connection.execute(sql, [userId, startTime, endTime, duration]);
+        await connection.execute(sql, [id_usuario, startTime, endTime, duration]);
 
-        console.log(`📦 Sesión guardada: ${userId}, duración: ${duration}s`);
+        console.log(`📦 Sesión guardada: ${id_usuario}, duración: ${duration}s`);
         res.json({ done: true, message: "Sesión registrada correctamente." });
 
     } catch (err) {
@@ -223,7 +223,7 @@ app.post("/login", async (req, res) => {
     connection = await getDBConnection();
 
     const [rows] = await connection.execute(
-      `SELECT id, password, userName FROM usuarios WHERE userName = ?`,
+      `SELECT id_usuario, password, userName FROM Usuario WHERE userName = ?`,
       [username]
     );
 
@@ -244,7 +244,7 @@ app.post("/login", async (req, res) => {
     }
 
     req.session.authenticated = true;
-    req.session.userId = user.id;
+    req.session.userId = user.id_usuario;
     req.session.username = user.userName;
 
     return res.redirect("/dashboard");
@@ -277,7 +277,7 @@ app.post("/forgot", async (req, res) => {
     connection = await getDBConnection();
 
     const [result] = await connection.execute(
-      "SELECT * FROM usuarios WHERE email = ?",
+      "SELECT * FROM Usuario WHERE email = ?",
       [email]
     );
 
@@ -384,7 +384,7 @@ app.post("/reset-password", async (req, res) => {
   try {
     connection = await getDBConnection();
     await connection.execute(
-      "UPDATE usuarios SET password = ? WHERE email = ?",
+      "UPDATE Usuario SET password = ? WHERE email = ?",
       [hashed, payload.email]
     );
 
@@ -417,78 +417,76 @@ app.get("/dashboard", async (req, res) => {
         users: `
             SELECT u.userName, u.country, u.deviceModel, u.platform, s.startTime, s.endTime,
                 TIMESTAMPDIFF(MINUTE, s.startTime, s.endTime) AS duration_min
-            FROM usuarios u
-            LEFT JOIN sesiones s ON u.id = s.userId
+            FROM Usuario u
+            LEFT JOIN Sesion s ON u.id_usuario = s.id_usuario
             WHERE s.startTime IS NOT NULL
             ORDER BY s.startTime DESC
             LIMIT 15
         `,
-        totalUsers: `SELECT COUNT(*) AS total FROM usuarios`,
-        avgSession: `SELECT ROUND(AVG(duration_seconds)/60, 2) AS avg FROM sesiones`,
-        countries: `SELECT COUNT(DISTINCT country) AS total FROM usuarios`,
+        totalUsers: `SELECT COUNT(*) AS total FROM Usuario`,
+        avgSession: `SELECT ROUND(AVG(duration_seconds)/60, 2) AS avg FROM Sesion`,
+        countries: `SELECT COUNT(DISTINCT country) AS total FROM Usuario`,
         activeToday: `
             SELECT COUNT(*) AS total
-            FROM sesiones
+            FROM Sesion
             WHERE DATE(startTime) = DATE(CONVERT_TZ(NOW(), '+00:00', '-06:00'));
         `,
         thisWeek: `
             SELECT COUNT(*) AS total
-            FROM sesiones
+            FROM Sesion
             WHERE startTime >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
         `,
         topDevice: `
             SELECT deviceModel, COUNT(*) AS total
-            FROM usuarios
+            FROM Usuario
             GROUP BY deviceModel
             ORDER BY total DESC
             LIMIT 1
         `,
         topLanguage: `
             SELECT systemLanguage, COUNT(*) AS total
-            FROM usuarios
+            FROM Usuario
             GROUP BY systemLanguage
             ORDER BY total DESC
             LIMIT 1
         `,
         topPlatform: `
             SELECT platform, COUNT(*) AS total
-            FROM usuarios
+            FROM Usuario
             GROUP BY platform
             ORDER BY total DESC
             LIMIT 1
         `,
         sessionsByDay: `
             SELECT DATE(startTime) as day, COUNT(*) AS count
-            FROM sesiones
+            FROM Sesion
             WHERE startTime >= DATE_SUB(CURDATE(), INTERVAL 15 DAY)
             GROUP BY day
             ORDER BY day ASC
         `,
         countriesPie: `
             SELECT country, COUNT(*) AS total
-            FROM usuarios
+            FROM Usuario
             GROUP BY country
             ORDER BY total DESC
             LIMIT 10
         `,
         durationHistogram: `
             SELECT FLOOR(duration_seconds / 60) AS duration_min, COUNT(*) AS count
-            FROM sesiones
+            FROM Sesion
             GROUP BY duration_min
             ORDER BY duration_min
         `,
         genderPlatform: `
             SELECT gender, platform, COUNT(*) AS total
-            FROM usuarios
+            FROM Usuario
             GROUP BY gender, platform
-
         `,
         genderCount: `
               SELECT gender, COUNT(*) AS total
-              FROM usuarios
+              FROM Usuario
               GROUP BY gender
             `
-
     };
 
     let connection;
@@ -541,27 +539,27 @@ app.get("/profile", async (req, res) => {
     const sql = {
         sessionsByDay: `
             SELECT DATE(startTime) as day, COUNT(*) AS count
-            FROM sesiones
+            FROM Sesion
             WHERE startTime >= DATE_SUB(CURDATE(), INTERVAL 15 DAY)
             GROUP BY day
             ORDER BY day ASC
         `,
         countriesPie: `
             SELECT country, COUNT(*) AS total
-            FROM usuarios
+            FROM Usuario
             GROUP BY country
             ORDER BY total DESC
             LIMIT 10
         `,
         durationHistogram: `
             SELECT FLOOR(duration_seconds / 60) AS duration_min, COUNT(*) AS count
-            FROM sesiones
+            FROM Sesion
             GROUP BY duration_min
             ORDER BY duration_min
         `,
         genderPlatform: `
             SELECT gender, platform, COUNT(*) AS total
-            FROM usuarios
+            FROM Usuario
             GROUP BY gender, platform
         `
     };
@@ -608,8 +606,8 @@ app.get("/dashboard/users", async (req, res) => {
   try {
     connection = await getDBConnection();
     const [users] = await connection.execute(`
-      SELECT id, userName, email, country, deviceModel, systemLanguage
-      FROM usuarios
+      SELECT id_usuario, userName, email, country, deviceModel, systemLanguage
+      FROM Usuario
       ORDER BY userName ASC
     `);
 
@@ -637,12 +635,12 @@ app.get("/dashboard/users/:id", async (req, res) => {
     connection = await getDBConnection();
 
     const [[user]] = await connection.execute(
-      `SELECT * FROM usuarios WHERE id = ?`,
+      `SELECT * FROM Usuario WHERE id_usuario = ?`,
       [userId]
     );
 
     const [sessions] = await connection.execute(
-      `SELECT * FROM sesiones WHERE userId = ? ORDER BY startTime DESC`,
+      `SELECT * FROM Sesion WHERE id_usuario = ? ORDER BY startTime DESC`,
       [userId]
     );
 

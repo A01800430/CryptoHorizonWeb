@@ -17,7 +17,7 @@ body {
   transition: all 0.4s ease-in-out;
 
   background-color: var(--bg-light);
-  background-image: radial-gradient(#975 1.2px, transparent 1.2px);
+  background-image: radial-gradient(rgba(153, 119, 85, 0.3) 1.2px, transparent 1.2px);
   background-size: 25px 25px;
 }
 
@@ -25,7 +25,7 @@ body {
 body.dark-mode {
   background-color: var(--bg-dark);
   color: #e0e0e0;
-  background-image: radial-gradient(white 1.2px, transparent 1.2px);
+  background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1.2px, transparent 1.2px);
 }
 
 /* Tarjetas KPI */
@@ -728,8 +728,18 @@ body.dark-mode #scrollUpBtn {
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
 }
 
-#genderChart svg {
-  max-width: 100%;
+#genderContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100px;
+}
+
+#genderChart {
+  width: 100%;
+  height: 50%;
+  margin: 0 auto;
+  display: block;
 }
 
 .chart-container-auto {

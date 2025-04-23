@@ -6,7 +6,7 @@ am5.ready(function () {
 
   // 🔧 Ajusta dinámicamente la altura del contenedor
   const rowHeight = 70; // aprox. 2 filas de íconos
-  const padding = 80; // para títulos y espacios
+  const padding = 60; // para títulos y espacios
   const heightEstimate = rowHeight * 2 + Math.ceil(total / 20) * rowHeight + padding;
 
   // Asignar altura al div antes de inicializar el gráfico
@@ -16,7 +16,7 @@ am5.ready(function () {
   const root = am5.Root.new("genderChart");
   root.setThemes([am5themes_Animated.new(root)]);
 
-  const iconSize = 50; // px
+  const iconSize = 60; // px
   const iconSpacing = 7; // px
 
   const chart = root.container.children.push(am5.Container.new(root, {
@@ -40,7 +40,7 @@ am5.ready(function () {
       text: `${label} ${count}/${total}`,
       fontSize: 16,
       fontWeight: "500",
-      fill: am5.color(0x333333),
+      fill: am5.color(0x999999),
       minWidth: 120,
       textAlign: "right",
       centerY: am5.p50,
