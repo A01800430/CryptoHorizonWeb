@@ -1,0 +1,33 @@
+<%- include('../partials/header') %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <button id="themeToggle" class="btn btn-outline-secondary">🌙 Toggle Theme</button>
+</div>
+
+<div class="container py-5" style="max-width: 500px;">
+  <div class="card shadow">
+    <div class="card-body">
+      <h2 class="text-center text-primary mb-4">🔐 Panel Login</h2>
+
+      <% if (error) { %>
+        <div class="alert alert-danger"><%= error %></div>
+      <% } %>
+
+      <form method="POST" action="/login">
+        <div class="mb-3">
+          <label class="form-label">Username</label>
+          <input type="text" name="username" class="form-control" required />
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Password</label>
+          <input type="password" name="password" class="form-control" required />
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Login</button>
+      </form>
+    </div>
+  </div>
+  <p class="text-center mt-3">¿No tienes cuenta? <a href="/register">Regístrate</a></p>
+  <p class="text-center mt-3">¿Olvidaste tu contraseña? <a href="/forgot">Restablecer</a></p>
+</div>
+
+<%- include('../partials/footer') %>

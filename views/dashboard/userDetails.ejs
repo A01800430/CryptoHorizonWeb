@@ -1,0 +1,41 @@
+<%- include('../partials/header') %>
+<body>
+  <div class="menu-container">
+    <%- include('../partials/navbar') %>
+  </div>
+
+  <main class="container mt-5">
+    <h2 class="text-primary mb-3">User Profile: <%= user.userName %></h2>
+
+    <div class="card p-4 mb-4">
+      <h5 class="mb-2">Información básica</h5>
+      <p><strong>Email:</strong> <%= user.email %></p>
+      <p><strong>Country:</strong> <%= user.country %></p>
+      <p><strong>Gender:</strong> <%= user.gender || "N/A" %></p>
+      <p><strong>Device:</strong> <%= user.deviceModel %></p>
+      <p><strong>System Language:</strong> <%= user.systemLanguage %></p>
+    </div>
+
+    <h5 class="mb-3">Sesiones registradas:</h5>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Start</th>
+          <th>End</th>
+          <th>Duration</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% sessions.forEach(s => { %>
+          <tr>
+            <td><%= s.startTime %></td>
+            <td><%= s.endTime %></td>
+            <td><%= Math.floor(s.duration_seconds / 60) %> min</td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </main>
+
+<%- include('../partials/footer') %>
+</body>

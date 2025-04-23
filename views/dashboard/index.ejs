@@ -1,0 +1,142 @@
+<%- include('../partials/header') %>
+
+<body class="animate__animated animate__fadeIn">
+
+<!-- Navbar sticky y centrada -->
+<div class="menu-container">
+  <%- include('../partials/navbar') %>
+</div>
+
+
+<main class="py-4 px-3 px-sm-4 px-md-5 px-xl-5">
+
+  <!-- Header del dashboard -->
+  <div class="mb-4">
+    <h1 class="fw-bold text-primary">Dashboard Overview</h1>
+    <p class="text-muted ">Welcome, <%= username %></p>
+  </div>
+
+  <!-- KPIs principales -->
+  <% const kpi = [
+    { icon: "🧍", title: "Total Users", val: totalUsers, color: "success" },
+    { icon: "⏱️", title: "Avg. Session", val: avgSession + ' min', color: "info" },
+    { icon: "🌎", title: "Countries", val: countries, color: "warning" },
+    { icon: "👩‍💻", title: "Active Today", val: activeToday, color: "secondary" },
+    { icon: "📅", title: "Sessions This Week", val: sessionsThisWeek, color: "primary" },
+    { icon: "📱", title: "Top Device", val: topDevice, color: "danger" },
+    { icon: "🌐", title: "Top Language", val: topLanguage, color: "success" },
+    { icon: "🖥️", title: "Top Platform", val: topPlatform, color: "primary" }
+  ] %>
+
+  <section class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 mb-5">
+    <% kpi.forEach((k, i) => { %>
+      <div class="col animate__animated animate__fadeInUp animate__delay-<%= Math.floor(i / 4) * 0.4 %>s">
+        <div class="card h-100 neumorphism">
+          <div class="card-body d-flex flex-column justify-content-center">
+            <h5 class="text-<%= k.color %> mb-2">
+              <span class="emoji" style="font-size:1.8rem;"><%= k.icon %></span> <%= k.title %>
+            </h5>
+            <p class="fs-4 fw-bold text-center m-0"><%= k.val %></p>
+          </div>
+        </div>
+      </div>
+    <% }) %>
+  </section>
+
+  <!-- Gráfica: Usuarios por país -->
+  <section class="mb-5 animate__animated animate__fadeInUp animate__delay-1s">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4 class="text-primary mb-0">Users by Country</h4>
+      <button id="toggleProjection" class="btn-dashboard btn-sm">Toggle Map / Globe</button>
+    </div>
+    <div class="chart-container neumorphism">
+      <div id="globeChart" style="width: 100%; height: 100%;"></div>
+    </div>
+  </section>
+
+  <!-- Gráfica: Sesiones por día -->
+  <section class="mb-5 animate__animated animate__fadeInUp animate__delay-1-2s">
+    <h4 class="text-primary mb-3">Sessions by Day</h4>
+    <div class="chart-container neumorphism">
+      <div id="sessionsChart" style="width: 100%; height: 100%;"></div>
+    </div>
+  </section>
+
+<!-- Gráfico: Usuarios por género -->
+<section class="mb-5 animate__animated animate__fadeInUp animate__delay-1-4s">
+  <h4 class="text-primary mb-3">Users by Gender</h4>
+  <div class="chart-container chart-container-auto">
+    <div id="genderChart" style="width: 100%; height: 50%;"></div>
+  </div>
+</section>
+
+
+  <!-- Tabla: Sesiones recientes -->
+  <section class="mt-5 animate__animated animate__fadeInUp animate__delay-1-4s">
+    <h4 class="text-primary mb-3">Recent Sessions</h4>
+    <div class="table-responsive neumorphism">
+      <table class="table table-hover mb-0" style="background-color: white; min-width: 768px;">
+        <thead class="table-dark">
+          <tr>
+            <th>Username</th>
+            <th>Country</th>
+            <th>Device</th>
+            <th>Platform</th>
+            <th>Start</th>
+            <th>End</th>
+            <th>Duration</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% users.forEach(u => { %>
+            <tr>
+              <td><%= u.userName %></td>
+              <td><%= u.country %></td>
+              <td><%= u.deviceModel %></td>
+              <td><%= u.platform %></td>
+              <td><%= u.startTime %></td>
+              <td><%= u.endTime %></td>
+              <td><%= u.duration_min %> min</td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+
+
+<!-- Variables globales para los gráficos -->
+<script>
+  window.countriesData = <%- JSON.stringify(countriesPie) %>;
+  window.sessionsByDay = <%- JSON.stringify(sessionsByDay) %>;
+
+  window.genderCountData = <%- JSON.stringify(genderCount) %>;;
+</script>
+<!-- Librerías amCharts necesarias -->
+<script src="https://cdn.amcharts.com/lib/5/index.js"></script>
+<script src="https://cdn.amcharts.com/lib/5/xy.js"></script>
+<script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
+
+<script src="/js/charts/genderChart.js"></script>
+
+
+<!-- Scripts -->
+<script src="/js/utils/countryCodes.js"></script>
+<script src="/js/charts/mapChart.js"></script>
+<script src="/js/charts/sessionsChart.js"></script>
+
+<!-- scrollUpBtn -->
+<!-- Botón de subir -->
+<button id="scrollUpBtn" title="Back to top">
+  <ion-icon name="arrow-up-outline"></ion-icon>
+</button>
+
+<!-- Script que lo activa (después del botón) -->
+<script src="/js/scrollNav.js"></script>
+
+<%- include('../partials/footer') %>
+</body>
+</html>
