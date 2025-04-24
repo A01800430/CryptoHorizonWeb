@@ -4,6 +4,7 @@ import cors from "cors";
 import crypto from "crypto";
 import path from "path";
 import session from "express-session";
+import dotenv from 'dotenv';
 import { fileURLToPath } from "url";
 import { Resend } from 'resend';
 
@@ -39,18 +40,20 @@ app.use('/profile', checkAuth);
 app.use('/patterns', checkAuth);
 app.use('/world', checkAuth);
 
+
+dotenv.config();
 const port = process.env.PORT ?? 8080;
 const ipAddress = process.env.C9_HOSTNAME ?? 'localhost';
 
 // Conexión a MySQL
 async function getDBConnection() {
-    return await mysql.createConnection({
-        host: "bd-desarrollo-web.cccvcrwag86o.us-east-1.rds.amazonaws.com",
-        user: "admin",
-        password: "&j4w:)bN6Rcq2xL",
-        database: "Cryptohorizon",
-        waitForConnections: true
-    });
+  return await mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_DATABASE,
+      waitForConnections: true
+  });
 }
 
 // ==================== ✅ DIRECTORIO RAIZ==================
@@ -91,7 +94,7 @@ app.post("/loginUser", async (req, res) => {
     }
 });
 
-// ==================== ✅ REGISTRO EXTENDIDO ====================
+// ==================== ✅ REGISTRO DE USUARIO ====================
 app.post("/createUser", async (req, res) => {
     const {
         username, email, pass, birthDate, gender,
@@ -154,13 +157,80 @@ app.post("/createUser", async (req, res) => {
     }
 });
 
+// ==================== 👑 REGISTRO DE ADMINISTRADOR ====================
+app.post("/createAdmin", async (req, res) => {
+  const {
+      username, email, pass, birthDate, gender,
+      country, master_pass, deviceModel, operatingSystem, platform, systemLanguage
+  } = req.body;
+
+  if (master_pass !== process.env.MASTER_PASS) {
+      return res.json({ done: false, message: "Acceso no autorizado" });
+  }
+
+  if (!username || !email || !pass) {
+      return res.json({ done: false, message: "Faltan campos" });
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+      return res.json({ done: false, message: "Correo no válido" });
+  }
+
+  const passHash = crypto.createHash("sha256").update(pass).digest("hex");
+
+  let connection;
+  try {
+      connection = await getDBConnection();
+
+      const [userCheck] = await connection.execute(
+          "SELECT * FROM Usuario WHERE userName = ?",
+          [username]
+      );
+      if (userCheck.length > 0) {
+          return res.json({ done: false, message: "El usuario ya existe" });
+      }
+
+      const [emailCheck] = await connection.execute(
+          "SELECT * FROM Usuario WHERE email = ?",
+          [email]
+      );
+      if (emailCheck.length > 0) {
+          return res.json({ done: false, message: "El correo ya está registrado" });
+      }
+
+      const insertSQL = `
+          INSERT INTO Usuario
+          (userName, email, password, birthDate, gender, country, deviceModel, operatingSystem, platform, systemLanguage, is_admin)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `;
+
+      const values = [
+          username, email, passHash, birthDate || null, gender || null,
+          country || null, deviceModel || null, operatingSystem || null,
+          platform || null, systemLanguage || null, true
+      ];
+
+      await connection.execute(insertSQL, values);
+
+      console.log("👑 Administrador registrado:", username);
+      res.json({ done: true, message: "Administrador creado con éxito" });
+
+  } catch (err) {
+      console.error("❌ Error al registrar administrador:", err);
+      res.json({ done: false, message: "Error al registrar el administrador" });
+  } finally {
+      if (connection) await connection.end();
+  }
+});
+
 app.get("/register", (req, res) => {
     res.render("dashboard/register", { error: null, success: null });
   });
 
 app.post("/register", async (req, res) => {
     try {
-      const response = await fetch(`http://${ipAddress}:${port}/createUser`, {
+      const response = await fetch(`http://${ipAddress}:${port}/createAdmin`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req.body)
@@ -169,7 +239,7 @@ app.post("/register", async (req, res) => {
 
       if (result.done) {
         return res.render("dashboard/register", {
-          success: "✅ Usuario creado correctamente. Ya puedes iniciar sesión.",
+          success: "✅ Administrador creado correctamente. Ya puedes iniciar sesión.",
           error: null
         });
       } else {
