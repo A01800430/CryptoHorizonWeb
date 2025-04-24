@@ -1,5 +1,14 @@
 <%- include('../partials/header') %>
 
+<script>
+  // Evitar que la página se cargue desde cache
+  window.onpageshow = function(event) {
+    if (event.persisted) {
+      window.location.reload();
+    }
+  };
+</script>
+
 <body>
 
 <!-- 🔝 Navbar colocada arriba -->

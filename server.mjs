@@ -24,6 +24,21 @@ app.use(session({
     cookie: { maxAge: 1000 * 60 * 60 * 2 } // 2 horas
 }));
 
+// Middleware para verificar la autenticación
+function checkAuth(req, res, next) {
+  if (!req.session.authenticated) {
+    // Destruye la sesión por completo por seguridad
+    req.session.destroy();
+    return res.redirect('/login');
+  }
+  next();
+}
+
+app.use('/dashboard', checkAuth);
+app.use('/profile', checkAuth);
+app.use('/patterns', checkAuth);
+app.use('/world', checkAuth);
+
 const port = process.env.PORT ?? 8080;
 const ipAddress = process.env.C9_HOSTNAME ?? 'localhost';
 
@@ -413,6 +428,11 @@ app.get("/dashboard", async (req, res) => {
     if (!req.session.authenticated) {
         return res.redirect("/login");
     }
+
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+
     const sql = {
         users: `
             SELECT u.userName, u.country, u.deviceModel, u.platform, s.startTime, s.endTime,
@@ -528,6 +548,11 @@ app.get("/dashboard", async (req, res) => {
 // ======================= patterns =======================
 app.get("/patterns", (req, res) => {
     if (!req.session.authenticated) return res.redirect("/login");
+
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+
     res.render("dashboard/patterns", { username: req.session.username });
 });
 
@@ -535,6 +560,10 @@ app.get("/patterns", (req, res) => {
 
 app.get("/profile", async (req, res) => {
     if (!req.session.authenticated) return res.redirect("/login");
+
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
 
     const sql = {
         sessionsByDay: `
@@ -595,12 +624,21 @@ app.get("/profile", async (req, res) => {
 
 app.get("/world", (req, res) => {
     if (!req.session.authenticated) return res.redirect("/login");
+
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+
     res.render("dashboard/world", { username: req.session.username });
 });
 
 // ==================== LISTA DE USUARIOS ====================
 app.get("/dashboard/users", async (req, res) => {
   if (!req.session.authenticated) return res.redirect("/login");
+
+  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
 
   let connection;
   try {
@@ -627,6 +665,10 @@ app.get("/dashboard/users", async (req, res) => {
 // ==================== PERFIL INDIVIDUAL ====================
 app.get("/dashboard/users/:id", async (req, res) => {
   if (!req.session.authenticated) return res.redirect("/login");
+
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
 
   const userId = req.params.id;
   let connection;
@@ -662,9 +704,15 @@ app.get("/dashboard/users/:id", async (req, res) => {
 
 
 // ======================= LOGOUT =======================
-app.get("/logout", (req, res) => {
-  req.session.destroy(() => res.redirect("/login"));
-})
+app.post("/logout", (req, res) => {
+  req.session.destroy((err) => {
+      if (err) {
+          return res.status(500).json({ message: "Error al cerrar sesión." });
+      }
+      res.redirect("/login");
+  });
+});
+
 
 // Página de recurso no encontrado (estatus 404)
 app.use((req, res) => {
