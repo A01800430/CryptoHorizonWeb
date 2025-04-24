@@ -238,7 +238,7 @@ app.post("/login", async (req, res) => {
     connection = await getDBConnection();
 
     const [rows] = await connection.execute(
-      `SELECT id_usuario, password, userName FROM Usuario WHERE userName = ?`,
+      `SELECT id_usuario, password, userName, is_admin FROM Usuario WHERE userName = ?`,
       [username]
     );
 
@@ -255,6 +255,12 @@ app.post("/login", async (req, res) => {
     if (inputPasswordHash !== user.password) {
       return res.render("dashboard/login", {
         error: "Contraseña incorrecta"
+      });
+    }
+
+    if (user.is_admin === 0) {
+      return res.render("dashboard/login", {
+        error: "Error al iniciar sesión: sin privilegios de administrador"
       });
     }
 
@@ -704,6 +710,16 @@ app.get("/dashboard/users/:id", async (req, res) => {
 
 
 // ======================= LOGOUT =======================
+
+app.get("/logout", (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      return res.status(500).json({ message: "Error al cerrar sesión." });
+    }
+    res.redirect("/login");
+  });
+});
+
 app.post("/logout", (req, res) => {
   req.session.destroy((err) => {
       if (err) {
@@ -713,14 +729,13 @@ app.post("/logout", (req, res) => {
   });
 });
 
+// ==================== 🔊 INICIAR SERVIDOR ====================
+app.listen(port, () => {
+    console.log(`Servidor esperando en: http://${ipAddress}:${port}`);
+});
 
 // Página de recurso no encontrado (estatus 404)
 app.use((req, res) => {
   const url = req.originalUrl;
   res.status(404).render('not_found', { url });
-});
-
-// ==================== 🔊 INICIAR SERVIDOR ====================
-app.listen(port, () => {
-    console.log(`Servidor esperando en: http://${ipAddress}:${port}`);
 });
