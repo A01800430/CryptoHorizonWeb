@@ -60,7 +60,7 @@ async function getDBConnection() {
 }
 
 // ==================== Directorio raiz (root) ==================
-app.get("/", (req, res) => res.redirect("/home"));
+app.get("/", (req, res) => res.redirect("publicViews/home"));
 
 // ==================== Juego Unity =================
 
