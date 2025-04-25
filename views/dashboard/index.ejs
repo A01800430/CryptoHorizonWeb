@@ -1,7 +1,7 @@
 <%- include('../partials/header') %>
 
+<!-- Evita que la página se cargue desde el caché del navegador -->
 <script>
-  // Evitar que la página se cargue desde cache
   window.onpageshow = function(event) {
     if (event.persisted) {
       window.location.reload();
@@ -16,13 +16,13 @@
   <%- include('../partials/navbar') %>
 </div>
 
-
+<!-- Contenido principal -->
 <main class="py-4 px-3 px-sm-4 px-md-5 px-xl-5">
 
-  <!-- Header del dashboard -->
+  <!-- Encabezado del Dashboard -->
   <div class="mb-4">
     <h1 class="fw-bold text-primary">Dashboard Overview</h1>
-    <p class="text-muted ">Welcome, <%= username %></p>
+    <p class="text-muted">Welcome, <%= username %></p>
   </div>
 
   <!-- KPIs principales -->
@@ -37,6 +37,7 @@
     { icon: "🖥️", title: "Top Platform", val: topPlatform, color: "primary" }
   ] %>
 
+  <!-- Tarjetas de KPIs -->
   <section class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 mb-5">
     <% kpi.forEach((k, i) => { %>
       <div class="col animate__animated animate__fadeInUp animate__delay-<%= Math.floor(i / 4) * 0.4 %>s">
@@ -52,7 +53,7 @@
     <% }) %>
   </section>
 
-  <!-- Gráfica: Usuarios por país -->
+  <!-- Gráfico: Usuarios por país -->
   <section class="mb-5 animate__animated animate__fadeInUp animate__delay-1s">
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h4 class="text-primary mb-0">Users by Country</h4>
@@ -63,7 +64,7 @@
     </div>
   </section>
 
-  <!-- Gráfica: Sesiones por día -->
+  <!-- Gráfico: Sesiones por día -->
   <section class="mb-5 animate__animated animate__fadeInUp animate__delay-1-2s">
     <h4 class="text-primary mb-3">Sessions by Day</h4>
     <div class="chart-container neumorphism">
@@ -71,41 +72,40 @@
     </div>
   </section>
 
-<!-- Gráfico: Usuarios por género -->
-<section class="mb-5 animate__animated animate__fadeInUp animate__delay-1-4s">
-  <h4 class="text-primary mb-3">Users by Gender</h4>
-  <div id="genderContainer" class="chart-container chart-container-auto">
-    <div id="genderChart"></div>
-  </div>
-</section>
-
+  <!-- Gráfico: Usuarios por género -->
+  <section class="mb-5 animate__animated animate__fadeInUp animate__delay-1-3s">
+    <h4 class="text-primary mb-3 text-center">Users by Gender</h4>
+    <div class="chart-container neumorphism d-flex justify-content-center align-items-center" style="max-width: 700px; margin: auto; padding: 20px;">
+      <div id="genderChartCanvas" style="width: 100%; height: 400px;"></div>
+    </div>
+  </section>
 
   <!-- Tabla: Sesiones recientes -->
   <section class="mt-5 animate__animated animate__fadeInUp animate__delay-1-4s">
     <h4 class="text-primary mb-3">Recent Sessions</h4>
-    <div class="table-responsive neumorphism">
-      <table class="table table-hover mb-0" style="background-color: white; min-width: 768px;">
-        <thead class="table-dark">
+    <div class="table-responsive neumorphism px-3 py-2">
+      <table class="table table-hover align-middle text-center">
+        <thead class="table-dark text-uppercase small">
           <tr>
-            <th>Username</th>
-            <th>Country</th>
-            <th>Device</th>
-            <th>Platform</th>
-            <th>Start</th>
-            <th>End</th>
-            <th>Duration</th>
+            <th scope="col">Username</th>
+            <th scope="col">Country</th>
+            <th scope="col">Device</th>
+            <th scope="col">Platform</th>
+            <th scope="col">Start</th>
+            <th scope="col">End</th>
+            <th scope="col">Duration</th>
           </tr>
         </thead>
         <tbody>
           <% users.forEach(u => { %>
             <tr>
-              <td><%= u.userName %></td>
+              <td><strong><%= u.userName %></strong></td>
               <td><%= u.country %></td>
               <td><%= u.deviceModel %></td>
               <td><%= u.platform %></td>
               <td><%= u.startTime %></td>
               <td><%= u.endTime %></td>
-              <td><%= u.duration_min %> min</td>
+              <td><span class="badge bg-secondary"><%= u.duration_min %> min</span></td>
             </tr>
           <% }) %>
         </tbody>
@@ -115,36 +115,35 @@
 
 </main>
 
-
-
 <!-- Variables globales para los gráficos -->
 <script>
   window.countriesData = <%- JSON.stringify(countriesPie) %>;
   window.sessionsByDay = <%- JSON.stringify(sessionsByDay) %>;
-
-  window.genderCountData = <%- JSON.stringify(genderCount) %>;;
+  window.genderCountData = <%- JSON.stringify(genderCount) %>;
 </script>
-<!-- Librerías amCharts necesarias -->
+
+<!-- Librerías amCharts -->
 <script src="https://cdn.amcharts.com/lib/5/index.js"></script>
 <script src="https://cdn.amcharts.com/lib/5/xy.js"></script>
+<script src="https://cdn.amcharts.com/lib/5/percent.js"></script> 
 <script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
 
+<!-- Librería ECharts -->
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+
+<!-- Scripts de los gráficos personalizados -->
 <script src="/js/charts/genderChart.js"></script>
-
-
-<!-- Scripts -->
 <script src="/js/utils/countryCodes.js"></script>
 <script src="/js/charts/mapChart.js"></script>
 <script src="/js/charts/sessionsChart.js"></script>
 
-<!-- scrollUpBtn -->
-<!-- Botón de subir -->
+<!-- Botón de scroll hacia arriba -->
 <button id="scrollUpBtn" title="Back to top">
   <ion-icon name="arrow-up-outline"></ion-icon>
 </button>
 
-<!-- Script que lo activa (después del botón) -->
-<script src="/js/scrollNav.js"></script>
+<!-- Script para activar el scrollUpBtn -->
+<script src="/js/utils/scrollNav.js"></script>
 
 <%- include('../partials/footer') %>
 </body>

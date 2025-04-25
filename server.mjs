@@ -4,9 +4,10 @@ import cors from "cors";
 import crypto from "crypto";
 import path from "path";
 import session from "express-session";
-import dotenv from 'dotenv';
 import { fileURLToPath } from "url";
 import { Resend } from 'resend';
+import dotenv from 'dotenv';
+dotenv.config(); // Carga el archivo .env
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -40,15 +41,14 @@ app.use('/profile', checkAuth);
 app.use('/patterns', checkAuth);
 app.use('/world', checkAuth);
 
+//Unity game
 app.use('/Build', express.static(path.join(__dirname, 'views/Game/Build')));
 app.use('/TemplateData', express.static(path.join(__dirname, 'views/Game/TemplateData')));
 
-
-dotenv.config();
 const port = process.env.PORT ?? 8080;
 const ipAddress = process.env.C9_HOSTNAME ?? 'localhost';
 
-// Conexión a MySQL
+// ==================== Conexión a MySQL ====================
 async function getDBConnection() {
   return await mysql.createConnection({
       host: process.env.DB_HOST,
@@ -59,16 +59,16 @@ async function getDBConnection() {
   });
 }
 
-// ==================== ✅ DIRECTORIO RAIZ==================
+// ==================== Directorio raiz (root) ==================
 app.get("/", (req, res) => res.redirect("/game"));
 
-// ==================== ✅ Juego Unity=================
+// ==================== Juego Unity =================
 
 app.get('/game', (req, res) => {
     res.render('Game/game');
 });
 
-// ==================== ✅ LOGIN EXTENDIDO PARA UNITY====================
+// ==================== Login (Unity API) ====================
 app.post("/loginUser", async (req, res) => {
     const { username, pass } = req.body;
 
@@ -103,7 +103,7 @@ app.post("/loginUser", async (req, res) => {
     }
 });
 
-// ==================== ✅ REGISTRO DE USUARIO ====================
+// ==================== Registro de usuario ====================
 app.post("/createUser", async (req, res) => {
     const {
         username, email, pass, birthDate, gender,
@@ -166,7 +166,7 @@ app.post("/createUser", async (req, res) => {
     }
 });
 
-// ==================== 👑 REGISTRO DE ADMINISTRADOR ====================
+// ==================== 👑 Registro de administrador ====================
 app.post("/createAdmin", async (req, res) => {
   const {
       username, email, pass, birthDate, gender,
@@ -266,7 +266,7 @@ app.post("/register", async (req, res) => {
     }
   });
 
-// ==================== ✅ GUARDAR SESIÓN ====================
+// ==================== 📦 Guardar sesión ====================
 app.post("/saveSession", async (req, res) => {
     const { id_usuario, startTime, endTime } = req.body;
 
@@ -304,7 +304,7 @@ app.post("/saveSession", async (req, res) => {
     }
 });
 
-// ==================== ✅ LOGIN PARA DASHBOARD====================
+// ==================== ✅ Login para dashboard ====================
 
 app.get("/login", (req, res) => {
   res.render("dashboard/login", { error: null });
@@ -442,7 +442,7 @@ app.get("/reset-password", (req, res) => {
     return res.status(400).send("Token inválido.");
   }
 
-  // ✅ Mostrar el formulario correctamente
+  // Mostrar el formulario correctamente
   res.render("dashboard/reset-password", { token, error: null, success: null });
 });
 
@@ -508,7 +508,7 @@ app.post("/reset-password", async (req, res) => {
 
 
 
-// ======================= dashboard =======================
+// ======================= 📊 Dashboard =======================
 app.get("/dashboard", async (req, res) => {
     if (!req.session.authenticated) {
         return res.redirect("/login");
@@ -630,18 +630,93 @@ app.get("/dashboard", async (req, res) => {
     }
 });
 
-// ======================= patterns =======================
-app.get("/patterns", (req, res) => {
-    if (!req.session.authenticated) return res.redirect("/login");
+// ======================= 📈 Rutas de visualización (patterns) =======================
+app.get("/sessions/patterns/data", async (req, res) => {
+  if (!req.session.authenticated) return res.status(401).json({ error: "No autorizado" });
 
-    res.setHeader('Cache-Control', 'no-store');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
+  let connection;
+  try {
+    connection = await getDBConnection();
 
-    res.render("dashboard/patterns", { username: req.session.username });
+    const [rows] = await connection.execute(`
+      SELECT 
+        DATE_FORMAT(CONVERT_TZ(startTime, '+00:00', '-06:00'), '%W') AS weekday,
+        DATE_FORMAT(CONVERT_TZ(startTime, '+00:00', '-06:00'), '%l%p') AS hour,
+        COUNT(*) AS value
+      FROM Sesion
+      GROUP BY weekday, hour
+    `);
+
+    // Días y horas en el orden esperado por el frontend
+    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const hours = [
+      "12AM", "1AM", "2AM", "3AM", "4AM", "5AM",
+      "6AM", "7AM", "8AM", "9AM", "10AM", "11AM",
+      "12PM", "1PM", "2PM", "3PM", "4PM", "5PM",
+      "6PM", "7PM", "8PM", "9PM", "10PM", "11PM"
+    ];
+
+    // Transformar a formato [x, y, value]
+    const transformedData = rows.map(row => {
+      return [
+        hours.indexOf(row.hour),
+        days.indexOf(row.weekday),
+        row.value
+      ];
+    });
+
+    res.json({
+      hours,
+      days,
+      data: transformedData
+    });
+
+  } catch (err) {
+    console.error("❌ Error al obtener datos del heatmap:", err);
+    res.status(500).json({ error: "Error al obtener datos" });
+  } finally {
+    if (connection) await connection.end();
+  }
 });
 
-// ======================= profile =======================
+app.get("/sessions/patterns", async (req, res) => {
+  if (!req.session.authenticated) return res.redirect("/login");
+
+  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+
+  res.render("sessions/patterns", { username: req.session.username });
+});
+
+app.get("/sessions/gantt/data", async (req, res) => {
+  if (!req.session.authenticated) return res.status(401).json({ error: "No autorizado" });
+
+  let connection;
+  try {
+    connection = await getDBConnection();
+
+    const [rows] = await connection.execute(`
+      SELECT 
+        u.userName AS category,
+        DATE_FORMAT(CONVERT_TZ(s.startTime, '+00:00', '-06:00'), '%Y-%m-%d %H:%i') AS fromDate,
+        DATE_FORMAT(CONVERT_TZ(s.endTime, '+00:00', '-06:00'), '%Y-%m-%d %H:%i') AS toDate
+      FROM Sesion s
+      JOIN Usuario u ON u.id_usuario = s.id_usuario
+      WHERE s.startTime IS NOT NULL AND s.endTime IS NOT NULL
+      ORDER BY s.startTime DESC
+      LIMIT 50
+    `);
+
+    res.json(rows);
+  } catch (err) {
+    console.error("❌ Error al obtener sesiones para Gantt:", err);
+    res.status(500).json({ error: "Error al obtener sesiones" });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+// ======================= 🛠️ Para custom dashboard =======================
 
 app.get("/profile", async (req, res) => {
     if (!req.session.authenticated) return res.redirect("/login");
@@ -705,19 +780,8 @@ app.get("/profile", async (req, res) => {
 });
 
 
-// ======================= world =======================
+// ======================= 👤👤 Usuarios  =======================
 
-app.get("/world", (req, res) => {
-    if (!req.session.authenticated) return res.redirect("/login");
-
-    res.setHeader('Cache-Control', 'no-store');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
-
-    res.render("dashboard/world", { username: req.session.username });
-});
-
-// ==================== LISTA DE USUARIOS ====================
 app.get("/dashboard/users", async (req, res) => {
   if (!req.session.authenticated) return res.redirect("/login");
 
@@ -725,29 +789,31 @@ app.get("/dashboard/users", async (req, res) => {
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
 
-  let connection;
-  try {
-    connection = await getDBConnection();
-    const [users] = await connection.execute(`
-      SELECT id_usuario, userName, email, country, deviceModel, systemLanguage
-      FROM Usuario
-      ORDER BY userName ASC
-    `);
 
-    res.render("dashboard/users", {
-      username: req.session.username,
-      users
-    });
+  let connection;
+   try {
+      connection = await getDBConnection();
+      const [users] = await connection.execute(`
+        SELECT id_usuario, userName, email, country, deviceModel, systemLanguage
+        FROM Usuario
+        ORDER BY userName ASC
+      `);
+
+
+      res.render("users/users", {
+          username: req.session.username,
+          users
+      });
 
   } catch (err) {
-    console.error("❌ Error al cargar usuarios:", err);
-    res.status(500).send("Error al obtener usuarios");
+      console.error("❌ Error al cargar usuarios:", err);
+      res.status(500).send("Error al obtener usuarios");
   } finally {
-    if (connection) await connection.end();
+      if (connection) await connection.end();
   }
 });
 
-// ==================== PERFIL INDIVIDUAL ====================
+// ==================== 👤 Usuario individual ====================
 app.get("/dashboard/users/:id", async (req, res) => {
   if (!req.session.authenticated) return res.redirect("/login");
 
@@ -787,9 +853,17 @@ app.get("/dashboard/users/:id", async (req, res) => {
   }
 });
 
+// ==================== 🏠 Home pública ====================
+app.get("/home", (req, res) => {
+  res.render("public/home");
+});
 
-// ======================= LOGOUT =======================
+// ==================== 🔊 INICIAR SERVIDOR ====================
+app.listen(port, () => {
+    console.log(`Servidor esperando en: http://${ipAddress}:${port}`);
+});
 
+// ======================= 🚪 Logout + 404 ======================= CHECAR <<<<<<<<<<<<<<<<<<
 app.get("/logout", (req, res) => {
   req.session.destroy((err) => {
     if (err) {
@@ -806,11 +880,6 @@ app.post("/logout", (req, res) => {
       }
       res.redirect("/login");
   });
-});
-
-// ==================== 🔊 INICIAR SERVIDOR ====================
-app.listen(port, () => {
-    console.log(`Servidor esperando en: http://${ipAddress}:${port}`);
 });
 
 // Página de recurso no encontrado (estatus 404)

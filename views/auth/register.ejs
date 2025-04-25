@@ -1,0 +1,102 @@
+<%- include('../partials/header') %>
+
+<!-- Botón para alternar tema claro/oscuro -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <button id="themeToggle" class="btn btn-outline-secondary">🌙 Toggle Theme</button>
+</div>
+
+<!-- Contenedor principal centrado -->
+<div class="container py-5" style="max-width: 600px;">
+  <div class="card shadow">
+    <div class="card-body">
+      <!-- Título del formulario -->
+      <h2 class="text-center text-success mb-4">📝 User Registration</h2>
+
+      <!-- Mensajes de error o éxito -->
+      <% if (error) { %>
+        <div class="alert alert-danger"><%= error %></div>
+      <% } %>
+
+      <% if (success) { %>
+        <div class="alert alert-success"><%= success %></div>
+      <% } %>
+
+      <!-- Formulario de registro -->
+      <form method="POST" action="/register">
+        <!-- Usuario -->
+        <div class="mb-3">
+          <label class="form-label">Username</label>
+          <input type="text" name="username" class="form-control" maxlength="20" required>
+        </div>
+
+        <!-- Correo -->
+        <div class="mb-3">
+          <label class="form-label">Email</label>
+          <input type="email" name="email" class="form-control" required>
+        </div>
+
+        <!-- Contraseña -->
+        <div class="mb-3">
+          <label class="form-label">Password</label>
+          <input type="password" name="pass" class="form-control" required>
+        </div>
+
+        <!-- Fecha de nacimiento -->
+        <div class="mb-3">
+          <label class="form-label">Birth Date</label>
+          <input type="date" name="birthDate" class="form-control">
+        </div>
+
+        <!-- Género -->
+        <div class="mb-3">
+          <label class="form-label">Gender</label>
+          <select name="gender" class="form-select" required>
+            <option value="">Select</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Non-binary">Non-binary</option>
+            <option value="Prefer not to say">Prefer not to say</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <!-- País -->
+        <div class="mb-3">
+          <label class="form-label">Country</label>
+          <select name="country" class="form-select" required>
+            <%- include('../partials/countries') %>
+          </select>
+        </div>
+
+        <!-- Clave maestra (opcional) -->
+        <div class="mb-3">
+          <label class="form-label fst-italic">Master Key</label>
+          <input type="password" name="master_pass" class="form-control">
+        </div>
+
+        <!-- Información técnica -->
+        <input type="hidden" name="systemLanguage" id="systemLanguage">
+        <input type="hidden" name="platform" id="platform">
+        <input type="hidden" name="operatingSystem" id="operatingSystem">
+        <input type="hidden" name="deviceModel" value="Web Browser">
+
+        <!-- Botón de registro -->
+        <button type="submit" class="btn btn-success w-100">Register</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Enlace para usuarios ya registrados -->
+  <p class="text-center mt-3">Already have an account? <a href="/login">Log in</a></p>
+</div>
+
+<!-- Script para capturar información del navegador -->
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("systemLanguage").value = navigator.language || "unknown";
+    document.getElementById("platform").value = navigator.platform || "unknown";
+    document.getElementById("operatingSystem").value = navigator.userAgent || "unknown";
+  });
+</script>
+
+<%- include('../partials/footer') %>

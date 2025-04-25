@@ -1,22 +1,17 @@
 <%- include('../partials/header') %>
 
-<script>
-  // Evitar que la página se cargue desde cache
-  window.onpageshow = function(event) {
-    if (event.persisted) {
-      window.location.reload();
-    }
-  };
-</script>
-
 <body>
+  <!-- Navbar superior -->
   <div class="menu-container">
     <%- include('../partials/navbar') %>
   </div>
 
+  <!-- Contenido principal del perfil de usuario -->
   <main class="container mt-5">
+    <!-- Encabezado del perfil con nombre de usuario -->
     <h2 class="text-primary mb-3">User Profile: <%= user.userName %></h2>
 
+    <!-- Tarjeta con la información básica del usuario -->
     <div class="card p-4 mb-4">
       <h5 class="mb-2">Información básica</h5>
       <p><strong>Email:</strong> <%= user.email %></p>
@@ -26,6 +21,7 @@
       <p><strong>System Language:</strong> <%= user.systemLanguage %></p>
     </div>
 
+    <!-- Tabla de sesiones del usuario -->
     <h5 class="mb-3">Sesiones registradas:</h5>
     <table class="table table-striped">
       <thead>
@@ -47,5 +43,6 @@
     </table>
   </main>
 
-<%- include('../partials/footer') %>
+  <!-- Footer -->
+  <%- include('../partials/footer') %>
 </body>

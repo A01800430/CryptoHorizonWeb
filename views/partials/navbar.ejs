@@ -1,45 +1,62 @@
+<!-- Preconexión para mejorar el rendimiento de carga de fuentes -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<!-- Fuente personalizada (Poppins) -->
 <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
 
+<!-- Menú lateral con estilo neumórfico -->
 <ul class="menu-neumorphic">
+
+  <!-- Enlace al dashboard principal -->
   <li style="--i:#a955ff;--j:#ea51ff">
     <a href="/dashboard">
       <span class="icon"><ion-icon name="home-outline"></ion-icon></span>
-      <span class="title">Home</span>
+      <span class="title">Dashboard</span>
     </a>
   </li>
-  <li style="--i:#56CCF2;--j:#2F80ED">
-    <a href="/patterns">
-      <span class="icon"><ion-icon name="analytics-outline"></ion-icon></span>
-      <span class="title">Patterns</span>
-    </a>
-  </li>
-  <li style="--i:#FF9966;--j:#FF5E62">
-    <a href="/profile">
-      <span class="icon"><ion-icon name="person-outline"></ion-icon></span>
-      <span class="title">Profile</span>
-    </a>
-  </li>
-  <li style="--i:#80FF72;--j:#7EE8FA">
-    <a href="/world">
-      <span class="icon"><ion-icon name="globe-outline"></ion-icon></span>
-      <span class="title">World</span>
-    </a>
-  </li>
-  <li style="--i:#00f2fe;--j:#4facfe">
-  <a href="/dashboard/users">
-    <span class="icon"><ion-icon name="people-outline"></ion-icon></span>
-    <span class="title">Users</span>
-  </a>
-</li>
 
+  <!-- Enlace a la sección de análisis de patrones -->
+  <li style="--i:#56CCF2;--j:#2F80ED">
+    <a href="/sessions/patterns">
+      <span class="icon"><ion-icon name="pulse-outline"></ion-icon></span>
+      <span class="title">Activity Insights</span>
+    </a>
+  </li>
+
+  <!-- Enlace al panel de dashboards personalizados -->
+  <li style="--i:#FF9966;--j:#FF5E62">
+    <a href="/sessions/custom">
+      <span class="icon"><ion-icon name="construct-outline"></ion-icon></span>
+      <span class="title">Custom Dashboard</span>
+    </a>
+  </li>
+
+  <!-- Enlace a gestión de usuarios -->
+  <li style="--i:#00f2fe;--j:#4facfe">
+    <a href="/dashboard/users">
+      <span class="icon"><ion-icon name="people-outline"></ion-icon></span>
+      <span class="title">Users</span>
+    </a>
+  </li>
+
+  <!-- Enlace al juego principal -->
+  <li style="--i:#B621FE;--j:#1FD1F9">
+    <a href="/home">
+      <span class="icon"><ion-icon name="game-controller-outline"></ion-icon></span>
+      <span class="title">Game</span>
+    </a>
+  </li>
+
+  <!-- Botón para alternar el tema oscuro/claro -->
   <li style="--i:#ffe600;--j:#ffa600">
     <button id="themeToggle">
       <span class="icon"><ion-icon name="contrast-outline"></ion-icon></span>
       <span class="title">Theme</span>
     </button>
   </li>
+
+  <!-- Cierre de sesión -->
   <li style="--i:#f85959;--j:#ff1e56">
     <a href="/logout">
       <span class="icon"><ion-icon name="log-out-outline"></ion-icon></span>
@@ -48,5 +65,6 @@
   </li>
 </ul>
 
+<!-- Librería de íconos Ionicons -->
 <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
 <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>

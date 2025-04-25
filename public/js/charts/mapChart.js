@@ -1,3 +1,10 @@
+/**
+ * Script para visualizar un mapa mundial interactivo con burbujas por país.
+ * - Permite alternar entre proyección tipo globo 3D y mapa plano (Mercator).
+ * - Usa amCharts para renderizar el mapa y burbujas con datos por país.
+ * - Permite rotación automática en modo globo y visualización responsiva.
+ */
+
 document.addEventListener("DOMContentLoaded", function () {
   const countriesData = window.countriesData;
   let root, chart, polygonSeries, bubbleSeries, backgroundSeries;
@@ -9,12 +16,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const toggleBtn = document.getElementById("toggleProjection");
 
-  // Crear botón Auto-Rotate (pero aún no se inserta)
+  // Crear botón de control para la rotación automática
   const switchBtn = document.createElement("button");
   switchBtn.id = "autoRotateSwitch";
   switchBtn.className = "btn-dashboard btn-sm ms-2";
   switchBtn.textContent = "⏸ Auto-Rotate";
 
+  // Alternar rotación automática al hacer click
   switchBtn.addEventListener("click", () => {
     if (isRotating) {
       if (rotationAnimation) rotationAnimation.pause();
@@ -35,26 +43,30 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
+  // Normaliza nombres de países para búsqueda
   function normalizeCountryName(name) {
     return name.trim().toLowerCase().replace(/\s+/g, " ");
   }
 
+  // Función principal para crear el mapa con la proyección actual
   function createMap(projectionType) {
+    // Limpiar mapa anterior si existe
     if (root) {
       root.dispose();
       document.getElementById("globeChart").innerHTML = "";
     }
 
-    // Eliminar botón si ya está
+    // Eliminar botón de rotación si ya está en el DOM
     if (switchBtn.parentElement) {
       switchBtn.parentElement.removeChild(switchBtn);
     }
 
+    // Inicializar amCharts root y tema
     root = am5.Root.new("globeChart");
     root.setThemes([am5themes_Animated.new(root)]);
 
+    // Configurar fondo según proyección y tema (oscuro o claro)
     const isDarkMode = document.body.classList.contains("dark-mode");
-
     root.container.set("background", am5.Rectangle.new(root, {
       fill: projectionType === "globe"
         ? am5.color(isDarkMode ? 0x121212 : 0xffffff)
@@ -62,8 +74,8 @@ document.addEventListener("DOMContentLoaded", function () {
       fillOpacity: 1
     }));
 
+    // Configurar tipo de proyección y navegación
     const homeZoom = projectionType === "map" ? 2.5 : 1.1;
-
     chart = root.container.children.push(am5map.MapChart.new(root, {
       projection: projectionType === "map"
         ? am5map.geoMercator()
@@ -76,15 +88,18 @@ document.addEventListener("DOMContentLoaded", function () {
       rotationX: projectionType === "globe" ? 0 : undefined
     }));
 
+    // Ajustar posición del mapa plano
     if (projectionType === "map") {
       chart.setAll({ y: am5.percent(15), centerY: am5.p0 });
     }
 
+    // Guardar valores iniciales para botón de "home"
     root.events.once("frameended", () => {
       initialZoom = chart.get("zoomLevel");
       initialCenter = chart.get("centerGeoPoint");
     });
 
+    // Agregar controles de zoom
     const zoomControl = chart.set("zoomControl", am5map.ZoomControl.new(root, {}));
     zoomControl.homeButton.set("visible", projectionType === "map");
     zoomControl.setAll({
@@ -95,6 +110,7 @@ document.addEventListener("DOMContentLoaded", function () {
       centerY: am5.p0
     });
 
+    // Acción para botón "home"
     zoomControl.homeButton.events.on("click", () => {
       chart.set("zoomLevel", initialZoom);
       chart.set("centerGeoPoint", initialCenter);
@@ -104,10 +120,7 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
 
-    if (projectionType === "map") {
-      chart.set("zoomLevel", 1.9);
-    }
-
+    // Fondo azul claro para el mapa
     backgroundSeries = chart.series.push(am5map.MapPolygonSeries.new(root, {}));
     backgroundSeries.mapPolygons.template.setAll({
       fill: am5.color(0xb3e5fc),
@@ -118,6 +131,7 @@ document.addEventListener("DOMContentLoaded", function () {
       geometry: am5map.getGeoRectangle(90, 180, -90, -180)
     });
 
+    // Capa de polígonos (países)
     polygonSeries = chart.series.push(am5map.MapPolygonSeries.new(root, {
       geoJSON: am5geodata_worldLow,
       exclude: ["AQ"]
@@ -129,14 +143,17 @@ document.addEventListener("DOMContentLoaded", function () {
       tooltipText: "{name}"
     });
 
+    // Capa de burbujas (datos por país)
     bubbleSeries = chart.series.push(am5map.MapPointSeries.new(root, {
       polygonIdField: "id",
       valueField: "value",
       calculateAggregates: true
     }));
 
+    // Template para burbujas (círculo + texto)
     const circleTemplate = am5.Template.new({});
 
+    // Burbuja principal con tooltip
     bubbleSeries.bullets.push(function (root, series, dataItem) {
       const container = am5.Container.new(root, {});
       const circle = container.children.push(
@@ -161,6 +178,7 @@ document.addEventListener("DOMContentLoaded", function () {
         })
       );
 
+      // Alinear texto al borde de la burbuja
       circle.on("radius", function (radius) {
         label.set("x", radius);
       });
@@ -171,6 +189,7 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     });
 
+    // Etiqueta con valor centrado en la burbuja
     bubbleSeries.bullets.push(function () {
       return am5.Bullet.new(root, {
         sprite: am5.Label.new(root, {
@@ -187,6 +206,7 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     });
 
+    // Reglas de escala de burbujas
     bubbleSeries.set("heatRules", [{
       target: circleTemplate,
       dataField: "value",
@@ -197,6 +217,7 @@ document.addEventListener("DOMContentLoaded", function () {
       key: "radius"
     }]);
 
+    // Preparar datos con códigos ISO de países
     const plotData = [];
     countriesData.forEach((entry) => {
       const original = entry.country;
@@ -212,9 +233,13 @@ document.addEventListener("DOMContentLoaded", function () {
       plotData.push({ id: iso, name: original, value: entry.total });
     });
 
+    // Asignar datos a la serie de burbujas
     bubbleSeries.data.setAll(plotData);
+
+    // Animación de aparición del mapa
     chart.appear(1000, 100);
 
+    // Activar rotación automática si es globo
     if (projectionType === "globe") {
       chart.set("rotationX", 0);
       chart.set("rotationY", 0);
@@ -230,6 +255,7 @@ document.addEventListener("DOMContentLoaded", function () {
       switchBtn.textContent = "⏸ Auto-Rotate";
     }
 
+    // Detener rotación si el usuario interactúa
     chart.chartContainer.events.on("pointerdown", function () {
       if (rotationAnimation && isRotating) {
         rotationAnimation.pause();
@@ -239,13 +265,16 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  // Crear mapa inicial con proyección por defecto
   createMap(currentProjection);
 
+  // Alternar entre mapa y globo
   document.getElementById("toggleProjection")?.addEventListener("click", () => {
     currentProjection = currentProjection === "globe" ? "map" : "globe";
     createMap(currentProjection);
   });
 
+  // Observar cambios de tema (claro/oscuro) y recrear mapa
   const observer = new MutationObserver(() => {
     createMap(currentProjection);
   });

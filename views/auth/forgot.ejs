@@ -1,0 +1,39 @@
+<%- include('../partials/header') %>
+
+<!-- Contenedor principal centrado con un ancho máximo -->
+<div class="container py-5" style="max-width: 500px;">
+  <div class="card shadow">
+    <div class="card-body">
+      <!-- Título de la página -->
+      <h2 class="text-center text-warning mb-4">🔑 Password Recovery</h2>
+
+      <!-- Mensaje de error (si existe) -->
+      <% if (error) { %>
+        <div class="alert alert-danger"><%= error %></div>
+      <% } %>
+
+      <!-- Mensaje de éxito (si existe) -->
+      <% if (success) { %>
+        <div class="alert alert-success"><%= success %></div>
+      <% } %>
+
+      <!-- Formulario para solicitar recuperación de contraseña -->
+      <form method="POST" action="/forgot">
+        <div class="mb-3">
+          <label class="form-label">Email address</label>
+          <input type="email" name="email" class="form-control" required />
+        </div>
+        <button type="submit" class="btn btn-warning w-100">
+          Send recovery link
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Enlace de regreso al login -->
+  <p class="text-center mt-3">
+    <a href="/login">Back to login</a>
+  </p>
+</div>
+
+<%- include('../partials/footer') %>

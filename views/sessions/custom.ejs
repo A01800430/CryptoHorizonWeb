@@ -1,0 +1,255 @@
+<%- include('../partials/header') %>
+
+<!-- Evita que la página se cargue desde caché si se vuelve atrás -->
+<script>
+  window.onpageshow = function(event) {
+    if (event.persisted) {
+      window.location.reload();
+    }
+  };
+</script>
+
+<body>
+
+<!-- Navbar superior -->
+<div class="menu-container">
+  <%- include('../partials/navbar') %>
+</div>
+
+<!-- Estilos y scripts de GridStack + Chart.js -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@9.4.0/dist/gridstack.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/gridstack@9.4.0/dist/gridstack-all.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Estilos personalizados para el modo claro/oscuro y los paneles -->
+<style>
+  body {
+    background-color: var(--bg-light);
+    transition: background-color 0.3s ease;
+  }
+
+  body.dark-mode {
+    background-color: var(--bg-dark);
+    color: var(--text-light);
+  }
+
+  .grid-stack-item-content {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 10px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+    overflow: hidden;
+  }
+
+  body.dark-mode .grid-stack-item-content {
+    background-color: #1e1e1e;
+    color: #f1f1f1;
+  }
+
+  #trash {
+    background-color: rgba(255, 0, 0, 0.2);
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    color: #ff0000;
+    font-weight: bold;
+    margin-bottom: 1rem;
+  }
+
+  body.dark-mode #trash {
+    background-color: rgba(255, 80, 80, 0.25);
+    color: #ffaaaa;
+    border: 1px solid rgba(255, 80, 80, 0.3);
+  }
+
+  .grid-stack {
+    border: 2px dashed #ccc;
+    background-color: #f8f9fa;
+    min-height: 600px;
+    border-radius: 10px;
+    transition: background-color 0.3s ease;
+  }
+
+  body.dark-mode .grid-stack {
+    background-color: #1c1c1c;
+    border-color: #444;
+  }
+
+  .sidepanel-item {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    padding: 8px;
+    border-radius: 6px;
+    text-align: center;
+    cursor: grab;
+  }
+
+  body.dark-mode .sidepanel-item {
+    background-color: #2a2a2a;
+    border-color: #555;
+    color: var(--text-light);
+  }
+
+  .intro-text {
+    color: #6c757d;
+  }
+
+  body.dark-mode .intro-text {
+    color: #ccc;
+  }
+</style>
+
+<!-- Contenido principal -->
+<main class="container-fluid py-4">
+
+  <!-- Encabezado -->
+  <div class="d-flex justify-content-between align-items-center mb-4 px-3">
+    <div>
+      <h1 class="fw-bold text-primary">👤 User Profile Analytics</h1>
+      <p class="intro-text">Drag a chart to the canvas or remove one by dropping it on 🗑️</p>
+    </div>
+  </div>
+
+  <!-- Estructura principal: barra lateral + canvas de widgets -->
+  <div class="row px-3">
+    <div class="col-md-2">
+      <!-- Zona de eliminación de widgets -->
+      <div id="trash">🗑️ Drag here to remove</div>
+
+      <!-- Panel lateral con widgets disponibles -->
+      <div class="sidepanel-item grid-stack-item mb-3" gs-w="4" gs-h="3" data-chart="genderPlatform">
+        📊 Gender vs Platform
+      </div>
+      <div class="sidepanel-item grid-stack-item mb-3" gs-w="4" gs-h="3" data-chart="sessionsDay">
+        📈 Sessions by Day
+      </div>
+      <div class="sidepanel-item grid-stack-item mb-3" gs-w="4" gs-h="3" data-chart="countryPie">
+        🥧 Top Countries
+      </div>
+      <div class="sidepanel-item grid-stack-item mb-3" gs-w="4" gs-h="3" data-chart="histogram">
+        📉 Duration Histogram
+      </div>
+    </div>
+
+    <!-- Contenedor de gráficos en el canvas -->
+    <div class="col-md-10">
+      <div class="grid-stack"></div>
+    </div>
+  </div>
+</main>
+
+<!-- Datos enviados desde el backend -->
+<script>
+  const sessionsByDay = <%- JSON.stringify(sessionsByDay || []) %>;
+  const countriesPie = <%- JSON.stringify(countriesPie || []) %>;
+  const durationHistogram = <%- JSON.stringify(durationHistogram || []) %>;
+  const genderPlatformData = <%- JSON.stringify(genderPlatform || []) %>;
+</script>
+
+<!-- Lógica del grid y renderizado de gráficas -->
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const grid = GridStack.init({
+      cellHeight: 120,
+      draggable: { handle: '.grid-stack-item-content' },
+      removable: '#trash',
+      acceptWidgets: '.sidepanel-item'
+    });
+
+    const chartRefs = [];
+
+    // Renderiza el gráfico dependiendo del tipo
+    function renderChart(chartType, canvasId) {
+      const ctx = document.getElementById(canvasId)?.getContext('2d');
+      if (!ctx) return;
+
+      let chart;
+
+      if (chartType === "sessionsDay") {
+        chart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: sessionsByDay.map(d => d.day),
+            datasets: [{
+              label: 'Sessions',
+              data: sessionsByDay.map(d => d.count),
+              borderColor: '#9327ff',
+              backgroundColor: 'rgba(147,39,255,0.2)',
+              tension: 0.3
+            }]
+          }
+        });
+      } else if (chartType === "countryPie") {
+        chart = new Chart(ctx, {
+          type: 'pie',
+          data: {
+            labels: countriesPie.map(c => c.country),
+            datasets: [{
+              data: countriesPie.map(c => c.total),
+              backgroundColor: ['#9327ff', '#00ffe7', '#ffc107', '#dc3545', '#198754']
+            }]
+          }
+        });
+      } else if (chartType === "histogram") {
+        chart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: durationHistogram.map(d => `${d.duration_min} min`),
+            datasets: [{
+              label: 'Sessions',
+              data: durationHistogram.map(d => d.count),
+              backgroundColor: '#00ffe7'
+            }]
+          }
+        });
+      } else if (chartType === "genderPlatform") {
+        const platforms = [...new Set(genderPlatformData.map(d => d.platform))];
+        const genders = [...new Set(genderPlatformData.map(d => d.gender))];
+
+        const datasets = genders.map(gender => ({
+          label: gender,
+          data: platforms.map(platform =>
+            genderPlatformData.find(d => d.gender === gender && d.platform === platform)?.total || 0),
+          backgroundColor: gender === 'Female' ? '#9327ff' : gender === 'Male' ? '#ff0000' : '#ffc107'
+        }));
+
+        chart = new Chart(ctx, {
+          type: 'bar',
+          data: { labels: platforms, datasets }
+        });
+      }
+
+      if (chart) chartRefs.push(chart);
+    }
+
+    // Evento: se añade un nuevo widget desde el panel lateral
+    grid.on('added', (e, items) => {
+      items.forEach(item => {
+        const chartType = item.el.getAttribute('data-chart');
+        if (!chartType) return;
+
+        const canvasId = `chart-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+        item.el.innerHTML = `<div class="grid-stack-item-content"><canvas id="${canvasId}" style="width:100%;height:100%;"></canvas></div>`;
+        renderChart(chartType, canvasId);
+      });
+    });
+
+    // Redibujar gráficos si hay cambios en el layout
+    grid.on('change', () => {
+      chartRefs.forEach(chart => chart.resize());
+    });
+
+    // Redibujar gráficos luego de un pequeño delay (estabilidad)
+    setTimeout(() => {
+      chartRefs.forEach(chart => chart.resize());
+    }, 600);
+
+    // Habilitar drag desde el panel lateral
+    GridStack.setupDragIn('.sidepanel-item', {
+      helper: 'clone'
+    });
+  });
+</script>
+
+<%- include('../partials/footer') %>
+</body>
