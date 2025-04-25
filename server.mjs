@@ -307,7 +307,7 @@ app.post("/saveSession", async (req, res) => {
 // ==================== ✅ Login para dashboard ====================
 
 app.get("/login", (req, res) => {
-  res.render("dashboard/login", { error: null });
+  res.render("auth/login", { error: null });
 });
 
 app.post("/login", async (req, res) => {
@@ -322,7 +322,7 @@ app.post("/login", async (req, res) => {
     );
 
     if (rows.length === 0) {
-      return res.render("dashboard/login", {
+      return res.render("auth/login", {
         error: "Usuario no encontrado"
       });
     }
@@ -332,13 +332,13 @@ app.post("/login", async (req, res) => {
     const inputPasswordHash = crypto.createHash("sha256").update(password).digest("hex");
 
     if (inputPasswordHash !== user.password) {
-      return res.render("dashboard/login", {
+      return res.render("auth/login", {
         error: "Contraseña incorrecta"
       });
     }
 
     if (user.is_admin === 0) {
-      return res.render("dashboard/login", {
+      return res.render("auth/login", {
         error: "Error al iniciar sesión: sin privilegios de administrador"
       });
     }
@@ -351,7 +351,7 @@ app.post("/login", async (req, res) => {
 
   } catch (err) {
     console.error("Login error:", err);
-    return res.render("dashboard/login", {
+    return res.render("auth/login", {
       error: "Error en el servidor"
     });
   } finally {
@@ -363,7 +363,7 @@ app.post("/login", async (req, res) => {
 const resend = new Resend("re_6yec76eG_QK8TLJRoZBFWDmEBNAm9BLxD");
 
 app.get("/forgot", (req, res) => {
-  res.render("dashboard/forgot", { error: null, success: null });
+  res.render("auth/forgot", { error: null, success: null });
 });
 
 app.post("/forgot", async (req, res) => {
@@ -443,7 +443,7 @@ app.get("/reset-password", (req, res) => {
   }
 
   // Mostrar el formulario correctamente
-  res.render("dashboard/reset-password", { token, error: null, success: null });
+  res.render("auth/reset-password", { token, error: null, success: null });
 });
 
 // Procesa la nueva contraseña y actualiza la BD
@@ -451,7 +451,7 @@ app.post("/reset-password", async (req, res) => {
   const { token, password } = req.body;
 
   if (!token || !password) {
-    return res.render("dashboard/reset-password", {
+    return res.render("auth/reset-password", {
       token,
       error: "Todos los campos son obligatorios",
       success: null
@@ -464,14 +464,14 @@ app.post("/reset-password", async (req, res) => {
     payload = JSON.parse(decoded);
 
     if (!payload.email || !payload.exp || Date.now() > payload.exp) {
-      return res.render("dashboard/reset-password", {
+      return res.render("auth/reset-password", {
         token: null,
         error: "El enlace ha expirado o es inválido",
         success: null
       });
     }
   } catch (err) {
-    return res.render("dashboard/reset-password", {
+    return res.render("auth/reset-password", {
       token: null,
       error: "Token inválido",
       success: null
@@ -488,7 +488,7 @@ app.post("/reset-password", async (req, res) => {
       [hashed, payload.email]
     );
 
-    return res.render("dashboard/reset-password", {
+    return res.render("auth/reset-password", {
       token: null,
       success: "✅ Contraseña actualizada correctamente. Ya puedes iniciar sesión.",
       error: null
@@ -496,7 +496,7 @@ app.post("/reset-password", async (req, res) => {
 
   } catch (err) {
     console.error("❌ Error al restablecer contraseña:", err);
-    return res.render("dashboard/reset-password", {
+    return res.render("auth/reset-password", {
       token,
       error: "Error en el servidor",
       success: null
@@ -505,8 +505,6 @@ app.post("/reset-password", async (req, res) => {
     if (connection) await connection.end();
   }
 });
-
-
 
 // ======================= 📊 Dashboard =======================
 app.get("/dashboard", async (req, res) => {
