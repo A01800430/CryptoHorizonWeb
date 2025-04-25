@@ -1,14 +1,15 @@
 <%- include('../partials/header') %>
 
-<!-- Botón para alternar entre tema claro/oscuro -->
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <button id="themeToggle" class="btn btn-outline-secondary">🌙 Toggle Theme</button>
+<!-- Navbar con margen superior -->
+<div class="menu-container">
+  <%- include('../partials/navbar_public') %>
 </div>
 
+  
 <!-- Botón para iniciar sesión como administrador -->
 <div class="container py-5" style="max-width: 200px;">
   <button id="button" class="btn btn-primary w-100">
-    <a href="/login" style="color: Black;">Login Admin</a>
+    <a href="/login" style="color: Black;">Login Admin</a> <!---->
   </button>
 </div>
 
@@ -17,7 +18,7 @@
 <link rel="stylesheet" href="TemplateData/style.css">
 
 <!-- Contenedor principal del juego Unity -->
-<div id="unity-container" class="unity-desktop">
+<div id="unity-container" class="unity-desktop" style="margin-top: 30px;">
   <canvas id="unity-canvas" width=854 height=480 tabindex="-1"></canvas> 
 
   <div id="unity-loading-bar">

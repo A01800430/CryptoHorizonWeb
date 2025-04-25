@@ -25,7 +25,7 @@
       <tbody>
         <% users.forEach(user => { %>
           <!-- Cada fila es clickeable y lleva al perfil individual del usuario -->
-          <tr onclick="window.location.href='/dashboard/users/<%= user.id_usuario %>'" style="cursor: pointer;">
+          <tr onclick="window.location.href='/users/users/<%= user.id_usuario %>'" style="cursor: pointer;">
             <td><%= user.userName %></td>
             <td><%= user.email %></td>
             <td><%= user.country %></td>

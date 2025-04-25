@@ -60,7 +60,7 @@ async function getDBConnection() {
 }
 
 // ==================== Directorio raiz (root) ==================
-app.get("/", (req, res) => res.redirect("/home"));
+app.get("/", (req, res) => {res.render("publicViews//home");});
 
 // ==================== Juego Unity =================
 
@@ -234,7 +234,7 @@ app.post("/createAdmin", async (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-    res.render("dashboard/register", { error: null, success: null });
+    res.render("auth/register", { error: null, success: null });
   });
 
 app.post("/register", async (req, res) => {
@@ -247,12 +247,12 @@ app.post("/register", async (req, res) => {
       const result = await response.json();
 
       if (result.done) {
-        return res.render("dashboard/register", {
+        return res.render("auth/register", {
           success: "✅ Administrador creado correctamente. Ya puedes iniciar sesión.",
           error: null
         });
       } else {
-        return res.render("dashboard/register", {
+        return res.render("auth/register", {
           error: result.message || "Error al registrar",
           success: null
         });
@@ -351,7 +351,7 @@ app.post("/login", async (req, res) => {
 
   } catch (err) {
     console.error("Login error:", err);
-    return res.render("auth/login", {
+    return res.render("dashboard/login", {
       error: "Error en el servidor"
     });
   } finally {
@@ -464,7 +464,7 @@ app.post("/reset-password", async (req, res) => {
     payload = JSON.parse(decoded);
 
     if (!payload.email || !payload.exp || Date.now() > payload.exp) {
-      return res.render("auth/reset-password", {
+      return res.render("dashboard/reset-password", {
         token: null,
         error: "El enlace ha expirado o es inválido",
         success: null
@@ -488,7 +488,7 @@ app.post("/reset-password", async (req, res) => {
       [hashed, payload.email]
     );
 
-    return res.render("auth/reset-password", {
+    return res.render("dashboard/reset-password", {
       token: null,
       success: "✅ Contraseña actualizada correctamente. Ya puedes iniciar sesión.",
       error: null
@@ -496,7 +496,7 @@ app.post("/reset-password", async (req, res) => {
 
   } catch (err) {
     console.error("❌ Error al restablecer contraseña:", err);
-    return res.render("auth/reset-password", {
+    return res.render("dashboard/reset-password", {
       token,
       error: "Error en el servidor",
       success: null
@@ -505,6 +505,8 @@ app.post("/reset-password", async (req, res) => {
     if (connection) await connection.end();
   }
 });
+
+
 
 // ======================= 📊 Dashboard =======================
 app.get("/dashboard", async (req, res) => {
@@ -716,13 +718,13 @@ app.get("/sessions/gantt/data", async (req, res) => {
 });
 // ======================= 🛠️ Para custom dashboard =======================
 
-app.get("/profile", async (req, res) => {
+app.get("/sessions/custom", async (req, res) => {
     if (!req.session.authenticated) return res.redirect("/login");
 
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
-
+    
     const sql = {
         sessionsByDay: `
             SELECT DATE(startTime) as day, COUNT(*) AS count
@@ -755,28 +757,27 @@ app.get("/profile", async (req, res) => {
     try {
         connection = await getDBConnection();
         const results = {};
-
+        
         for (const [key, query] of Object.entries(sql)) {
             const [rows] = await connection.execute(query);
             results[key] = rows;
         }
 
-        res.render("dashboard/profile", {
+        res.render("sessions/custom", {
             username: req.session.username,
             sessionsByDay: results.sessionsByDay,
             countriesPie: results.countriesPie,
             durationHistogram: results.durationHistogram,
             genderPlatform: results.genderPlatform
         });
-
+        
     } catch (err) {
-        console.error("❌ Error en /profile:", err);
-        res.status(500).send("Error en la vista de perfil");
+        console.error("❌ Error en /sessions/custom:", err);
+        res.status(500).send("Error al cargar el dashboard personalizado");
     } finally {
         if (connection) await connection.end();
     }
 });
-
 
 // ======================= 👤👤 Usuarios  =======================
 
@@ -812,7 +813,7 @@ app.get("/dashboard/users", async (req, res) => {
 });
 
 // ==================== 👤 Usuario individual ====================
-app.get("/dashboard/users/:id", async (req, res) => {
+app.get("/users/users/:id", async (req, res) => {
   if (!req.session.authenticated) return res.redirect("/login");
 
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
@@ -837,7 +838,7 @@ app.get("/dashboard/users/:id", async (req, res) => {
 
     if (!user) return res.status(404).send("Usuario no encontrado");
 
-    res.render("dashboard/userDetails", {
+    res.render("users/details", {
       username: req.session.username,
       user,
       sessions
@@ -853,7 +854,7 @@ app.get("/dashboard/users/:id", async (req, res) => {
 
 // ==================== 🏠 Home pública ====================
 app.get("/home", (req, res) => {
-  res.render("public/home");
+  res.render("publicViews/home");
 });
 
 // ==================== 🔊 INICIAR SERVIDOR ====================
@@ -883,5 +884,5 @@ app.post("/logout", (req, res) => {
 // Página de recurso no encontrado (estatus 404)
 app.use((req, res) => {
   const url = req.originalUrl;
-  res.status(404).render('not_found', { url });
+  res.status(404).render('partials/not_found', { url });
 });
