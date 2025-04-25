@@ -93,7 +93,7 @@ app.post("/loginUser", async (req, res) => {
 
         const user = result[0];
         console.log("✅ Login correcto:", username);
-        return res.json({ done: true, message: "Login exitoso. Bienvenido!", userId: user.id });
+        return res.json({ done: true, message: "Login exitoso. Bienvenido!", userId: user.id_usario });
 
     } catch (err) {
         console.error("❌ Error al buscar usuario:", err);
