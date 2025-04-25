@@ -40,6 +40,9 @@ app.use('/profile', checkAuth);
 app.use('/patterns', checkAuth);
 app.use('/world', checkAuth);
 
+app.use('/Build', express.static(path.join(__dirname, 'views/Game/Build')));
+app.use('/TemplateData', express.static(path.join(__dirname, 'views/Game/TemplateData')));
+
 
 dotenv.config();
 const port = process.env.PORT ?? 8080;
@@ -57,7 +60,13 @@ async function getDBConnection() {
 }
 
 // ==================== ✅ DIRECTORIO RAIZ==================
-app.get("/", (req, res) => res.redirect("/login"));
+app.get("/", (req, res) => res.redirect("/game"));
+
+// ==================== ✅ Juego Unity=================
+
+app.get('/game', (req, res) => {
+    res.render('Game/game');
+});
 
 // ==================== ✅ LOGIN EXTENDIDO PARA UNITY====================
 app.post("/loginUser", async (req, res) => {
