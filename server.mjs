@@ -861,11 +861,6 @@ app.post("/saveLevelCompleted", async (req, res) => { // Esta ruta registra los 
   // Recibe de Unity el id del usuario, el id del nivel y el número de aciertos en el quiz
   const {id_usuario, level_id, aciertos} = req.body;
 
-  // Verifica que los datos no estén vacíos
-  if (!id_usuario || !level_id || aciertos === undefined) {
-      return res.json({ done: false, message: "Faltan campos" });
-  }
-
   // Conecta a la base de datos
   let connection;
   try {
