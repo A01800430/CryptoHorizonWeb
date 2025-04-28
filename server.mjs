@@ -912,7 +912,7 @@ app.post("/saveLevelCompleted", async (req, res) => { // Esta ruta registra los 
   }
 });
 
-// ======================= get =======================
+// ======================= Get relevant data to load user progress =======================
 app.post("/getUserProgress", async (req, res) => { // Esta ruta regresa una tabla con los mejores intentos por nivel del usuario
   console.log('⭐ INICIO: getUserProgress');
   console.log('Datos recibidos:', req.body);
@@ -954,6 +954,37 @@ app.post("/getUserProgress", async (req, res) => { // Esta ruta regresa una tabl
   } catch (err) {
       console.error("❌ Error al obtener el progreso", err);
       res.json({ done: false, message: "Error al obtener el progreso" });
+  } finally {
+      if (connection) await connection.end();
+  }
+});
+
+// ======================= Generate leaderboard to insert it into Unity =======================
+app.get("/generateLeaderboard", async (req, res) => { // Esta ruta llama a un procedimiento almacenado para obtener el ranking de los usuarios
+  console.log('⭐ INICIO: generateLeaderboard');
+
+  // Conecta a la base de datos
+  let connection;
+  try {
+      connection = await getDBConnection();
+
+      const [leaderboard] = await connection.execute(
+        "CALL GenerarLeaderboard(1)"
+     );
+    
+      if (leaderboard.length === 0) {
+          return res.json({ done: false, message: "No leaderboard data yet" });
+      }
+
+      res.json({ 
+          done: true, 
+          message: "Progreso obtenido correctamente",
+          leaderboard: leaderboard[0]
+      });
+
+  } catch (err) {
+      console.error("❌ Error al obtener el leaderboard", err);
+      res.json({ done: false, message: "Error al obtener el leaderboard" });
   } finally {
       if (connection) await connection.end();
   }
