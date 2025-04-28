@@ -44,14 +44,14 @@
         <!-- Fecha de nacimiento -->
         <div class="mb-3">
           <label class="form-label">Birth Date</label>
-          <input type="date" name="birthDate" class="form-control">
+          <input type="date" name="birthDate" class="form-control" id="birthDateInput">
         </div>
 
         <!-- Género -->
         <div class="mb-3">
           <label class="form-label">Gender</label>
           <select name="gender" class="form-select" required>
-            <option value="">Select</option>
+            <option value="" disabled selected>Select</option>
             <option value="Male">Male</option>
             <option value="Female">Female</option>
             <option value="Non-binary">Non-binary</option>
@@ -96,6 +96,16 @@
     document.getElementById("systemLanguage").value = navigator.language || "unknown";
     document.getElementById("platform").value = navigator.platform || "unknown";
     document.getElementById("operatingSystem").value = navigator.userAgent || "unknown";
+
+    // Establecer fecha máxima para el campo de fecha de nacimiento
+    const today = new Date();
+    const maxDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const birthDateInput = document.getElementById("birthDateInput");
+    birthDateInput.max = maxDate.toISOString().split("T")[0];
+
+    // Establecer fecha mínima de 100 años atrás
+    const minDate = new Date(today.getFullYear() - 100, today.getMonth(), today.getDate());
+    birthDateInput.min = minDate.toISOString().split("T")[0];
   });
 </script>
 

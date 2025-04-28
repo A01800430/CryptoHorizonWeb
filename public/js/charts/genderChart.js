@@ -1,7 +1,7 @@
 /**
  * Script para renderizar un gráfico de pastel (donut) con ECharts.
  * - Muestra la distribución de usuarios según su género.
- * - Usa datos precargados en `window.genderCountData`.
+ * - Usa datos precargados en window.genderCountData.
  * - El gráfico se adapta al redimensionar la ventana.
  */
 
@@ -18,14 +18,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Validar que existan datos para graficar
   if (!genderData.length) {
-    console.warn("⚠️ No hay datos de género para mostrar.");
+    console.warn("⚠ No hay datos de género para mostrar.");
     return;
   }
 
   // Inicializar instancia de ECharts
   const chart = echarts.init(chartContainer);
 
-  // Configuración del gráfico de pastel
+  // Configuración del gráfico de dona
   const option = {
     color: ["#3498db", "#e91e63", "#95a5a6"],
     tooltip: {
@@ -34,12 +34,15 @@ document.addEventListener("DOMContentLoaded", () => {
     },
     legend: {
       top: '5%',
-      left: 'center'
+      left: 'center',
+      textStyle: {
+        color: '#5D6D7E'
+      }
     },
     series: [{
       name: 'Usuarios por género',
       type: 'pie',
-      radius: ['40%', '70%'], // Donut (no pastel completo)
+      radius: ['40%', '70%'], // Dona (no pastel completo)
       avoidLabelOverlap: false,
       padAngle: 0,
       itemStyle: {
@@ -49,7 +52,8 @@ document.addEventListener("DOMContentLoaded", () => {
       },
       label: {
         show: false,
-        position: 'center'
+        position: 'center',
+        color: "#7F8C8D"
       },
       emphasis: {
         label: {
