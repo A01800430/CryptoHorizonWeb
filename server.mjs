@@ -11,6 +11,7 @@ dotenv.config(); // Carga el archivo .env
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const BASE_URL = process.env.BASE_URL || `http://${ipAddress}:${port}`; //generar link de recuperación
 
 const app = express();
 app.use(cors());
@@ -323,7 +324,7 @@ app.post("/login", async (req, res) => {
 
     if (rows.length === 0) {
       return res.render("auth/login", {
-        error: "Usuario no encontrado"
+        error: "User not found"
       });
     }
 
@@ -333,13 +334,13 @@ app.post("/login", async (req, res) => {
 
     if (inputPasswordHash !== user.password) {
       return res.render("auth/login", {
-        error: "Contraseña incorrecta"
+        error: "Incorrect password"
       });
     }
 
     if (user.is_admin === 0) {
       return res.render("auth/login", {
-        error: "Error al iniciar sesión: sin privilegios de administrador"
+        error: "Error: no admin privileges"
       });
     }
 
@@ -352,7 +353,7 @@ app.post("/login", async (req, res) => {
   } catch (err) {
     console.error("Login error:", err);
     return res.render("dashboard/login", {
-      error: "Error en el servidor"
+      error: "Server error"
     });
   } finally {
     if (connection) await connection.end();
@@ -369,7 +370,7 @@ app.get("/forgot", (req, res) => {
 app.post("/forgot", async (req, res) => {
   const { email } = req.body;
   if (!email) {
-    return res.json({ done: false, message: "Email requerido" });
+    return res.json({ done: false, message: "Email required" });
   }
 
   let connection;
@@ -382,7 +383,7 @@ app.post("/forgot", async (req, res) => {
     );
 
     if (result.length === 0) {
-      return res.json({ done: false, message: "Correo no registrado" });
+      return res.json({ done: false, message: "Email not registered" });
     }
 
     const tokenData = {
@@ -391,16 +392,16 @@ app.post("/forgot", async (req, res) => {
     };
 
     const token = Buffer.from(JSON.stringify(tokenData)).toString("base64url");
-    const resetLink = `http://${ipAddress}:${port}/reset-password?token=${token}`;
+    const resetLink = `${BASE_URL}/reset-password?token=${token}`;
 
     const response = await resend.emails.send({
       from: "CryptoHorizon <no-reply@cryptohorizongame.org>",
       to: email,
-      subject: "Recupera tu contraseña",
+      subject: "Reset your password",
       html: `
-        <p>Haz clic para restablecer tu contraseña:</p>
+        <p>Click the link to reset your password</p>
         <p><a href="${resetLink}">${resetLink}</a></p>
-        <p>Este enlace expirará en 15 minutos.</p>
+        <p>This link will expire in 15 minutes.</p>
       `
     });
 
@@ -408,14 +409,14 @@ app.post("/forgot", async (req, res) => {
 
     // Si la API respondió con error:
     if (response.error) {
-      return res.json({ done: false, message: "Error al enviar el correo", detail: response.error });
+      return res.json({ done: false, message: "Error sending email", detail: response.error });
     }
 
-    return res.json({ done: true, message: "Correo enviado correctamente" });
+    return res.json({ done: true, message: "Email sent successfully" });
 
   } catch (err) {
     console.error("❌ Error general en /forgot:", err);
-    return res.json({ done: false, message: "Error al enviar el correo" });
+    return res.json({ done: false, message: "Error sending email" });
   } finally {
     if (connection) await connection.end();
   }
@@ -427,7 +428,7 @@ app.get("/reset-password", (req, res) => {
   const { token } = req.query;
 
   if (!token) {
-    return res.status(400).send("Token no proporcionado.");
+    return res.status(400).send("Token not provided.");
   }
 
   let payload;
@@ -436,7 +437,7 @@ app.get("/reset-password", (req, res) => {
     payload = JSON.parse(decoded);
 
     if (!payload.email || !payload.exp || Date.now() > payload.exp) {
-      return res.status(400).send("Token expirado o inválido.");
+      return res.status(400).send("Token expired or invalid.");
     }
   } catch (err) {
     return res.status(400).send("Token inválido.");
@@ -453,7 +454,7 @@ app.post("/reset-password", async (req, res) => {
   if (!token || !password) {
     return res.render("auth/reset-password", {
       token,
-      error: "Todos los campos son obligatorios",
+      error: "All fields are required",
       success: null
     });
   }
@@ -466,14 +467,14 @@ app.post("/reset-password", async (req, res) => {
     if (!payload.email || !payload.exp || Date.now() > payload.exp) {
       return res.render("dashboard/reset-password", {
         token: null,
-        error: "El enlace ha expirado o es inválido",
+        error: "The link has expired or is invalid",
         success: null
       });
     }
   } catch (err) {
     return res.render("auth/reset-password", {
       token: null,
-      error: "Token inválido",
+      error: "invalid token",
       success: null
     });
   }
@@ -498,7 +499,7 @@ app.post("/reset-password", async (req, res) => {
     console.error("❌ Error al restablecer contraseña:", err);
     return res.render("dashboard/reset-password", {
       token,
-      error: "Error en el servidor",
+      error: "Server error",
       success: null
     });
   } finally {
@@ -639,7 +640,7 @@ app.get("/sessions/patterns/data", async (req, res) => {
     connection = await getDBConnection();
 
     const [rows] = await connection.execute(`
-      SELECT 
+      SELECT
         DATE_FORMAT(CONVERT_TZ(startTime, '+00:00', '-06:00'), '%W') AS weekday,
         DATE_FORMAT(CONVERT_TZ(startTime, '+00:00', '-06:00'), '%l%p') AS hour,
         COUNT(*) AS value
@@ -697,7 +698,7 @@ app.get("/sessions/gantt/data", async (req, res) => {
     connection = await getDBConnection();
 
     const [rows] = await connection.execute(`
-      SELECT 
+      SELECT
         u.userName AS category,
         DATE_FORMAT(CONVERT_TZ(s.startTime, '+00:00', '-06:00'), '%Y-%m-%d %H:%i') AS fromDate,
         DATE_FORMAT(CONVERT_TZ(s.endTime, '+00:00', '-06:00'), '%Y-%m-%d %H:%i') AS toDate
@@ -724,7 +725,7 @@ app.get("/sessions/custom", async (req, res) => {
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
-    
+
     const sql = {
         sessionsByDay: `
             SELECT DATE(startTime) as day, COUNT(*) AS count
@@ -757,7 +758,7 @@ app.get("/sessions/custom", async (req, res) => {
     try {
         connection = await getDBConnection();
         const results = {};
-        
+
         for (const [key, query] of Object.entries(sql)) {
             const [rows] = await connection.execute(query);
             results[key] = rows;
@@ -770,7 +771,7 @@ app.get("/sessions/custom", async (req, res) => {
             durationHistogram: results.durationHistogram,
             genderPlatform: results.genderPlatform
         });
-        
+
     } catch (err) {
         console.error("❌ Error en /sessions/custom:", err);
         res.status(500).send("Error al cargar el dashboard personalizado");
