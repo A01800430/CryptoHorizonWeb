@@ -859,7 +859,12 @@ app.post("/saveLevelCompleted", async (req, res) => { // Esta ruta registra los 
   console.log('Datos recibidos:', req.body);
 
   // Recibe de Unity el id del usuario, el id del nivel y el número de aciertos en el quiz
-  const {id_usuario, level_id, aciertos} = req.body;
+  const {id_usuario, level_id, aciertos, tiempo_finalizacion} = req.body;
+
+  if (!id_usuario || !level_id || aciertos === undefined) {
+    console.log('❌ Error: Valores requeridos faltantes');
+    return res.json({ done: false, message: "Faltan campos" });
+  }
 
   // Conecta a la base de datos
   let connection;
@@ -886,12 +891,12 @@ app.post("/saveLevelCompleted", async (req, res) => { // Esta ruta registra los 
       // Definir inserción a la tabla IntentoNivel
       const insertSQL = `
           INSERT INTO IntentoNivel 
-          (id_usuario, id_nivel, puntaje, porcentaje_aciertos)
-          VALUES (?, ?, ?, ?)
+          (id_usuario, id_nivel, puntaje, porcentaje_aciertos, tiempo_finalizacion)
+          VALUES (?, ?, ?, ?, ?)
       `;
 
       const values = [
-          id_usuario, level_id, puntaje, porcentaje
+          id_usuario, level_id, puntaje, porcentaje, tiempo_finalizacion
       ];
 
       await connection.execute(insertSQL, values);
