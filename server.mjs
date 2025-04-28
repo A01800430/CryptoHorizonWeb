@@ -912,6 +912,53 @@ app.post("/saveLevelCompleted", async (req, res) => { // Esta ruta registra los 
   }
 });
 
+// ======================= get =======================
+app.post("/getUserProgress", async (req, res) => { // Esta ruta regresa una tabla con los mejores intentos por nivel del usuario
+  console.log('⭐ INICIO: getUserProgress');
+  console.log('Datos recibidos:', req.body);
+
+  // Recibe de Unity el id del usuario, el id del nivel y el número de aciertos en el quiz
+  const {id_usuario} = req.body;
+
+  if (!id_usuario) {
+    console.log('❌ Error: ID requerido faltante');
+    return res.json({ done: false, message: "Falta ID de usuario" });
+  }
+
+  // Conecta a la base de datos
+  let connection;
+  try {
+      connection = await getDBConnection();
+
+      const [userCheck] = await connection.execute(
+        "SELECT id_usuario FROM Usuario WHERE id_usuario = ?",
+        [id_usuario]
+     );
+    
+      if (userCheck.length === 0) {
+          return res.json({ done: false, message: "Usuario no encontrado" });
+      }
+
+      const [resultado] = await connection.execute(
+        "SELECT id_nivel AS level_id, MIN(tiempo_finalizacion) AS time FROM IntentoNivel WHERE id_usuario = ? GROUP BY id_nivel",
+        [id_usuario]
+      );
+
+      console.log("✅ Progreso obtenido:", resultado);
+      res.json({ 
+          done: true, 
+          message: "Progreso obtenido correctamente",
+          progress: resultado
+      });
+
+  } catch (err) {
+      console.error("❌ Error al obtener el progreso", err);
+      res.json({ done: false, message: "Error al obtener el progreso" });
+  } finally {
+      if (connection) await connection.end();
+  }
+});
+
 // ==================== 🏠 Home pública ====================
 app.get("/home", (req, res) => {
   res.render("publicViews/home");
