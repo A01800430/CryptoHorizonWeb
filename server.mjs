@@ -862,7 +862,7 @@ app.post("/saveLevelCompleted", async (req, res) => { // Esta ruta registra los 
   const {id_usuario, level_id, aciertos} = req.body;
 
   // Verifica que los datos no estén vacíos
-  if (!id_usuario || !level_id || !aciertos) {
+  if (!id_usuario || !level_id || aciertos === undefined) {
       return res.json({ done: false, message: "Faltan campos" });
   }
 
