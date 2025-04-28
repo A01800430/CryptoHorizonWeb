@@ -853,6 +853,65 @@ app.get("/users/users/:id", async (req, res) => {
   }
 });
 
+// ======================= Guardar progreso del usuario  =======================
+app.post("/saveLevelCompleted", async (req, res) => { // Esta ruta registra los intentos por nivel del usuario
+  console.log('⭐ INICIO: saveLevelCompleted');
+  console.log('Datos recibidos:', req.body);
+
+  // Recibe de Unity el id del usuario, el id del nivel y el número de aciertos en el quiz
+  const {id_usuario, level_id, aciertos} = req.body;
+
+  // Verifica que los datos no estén vacíos
+  if (!id_usuario || !level_id || !aciertos) {
+      return res.json({ done: false, message: "Faltan campos" });
+  }
+
+  // Conecta a la base de datos
+  let connection;
+  try {
+      connection = await getDBConnection();
+
+      const [userCheck] = await connection.execute(
+        "SELECT id_usuario FROM Usuario WHERE id_usuario = ?",
+        [id_usuario]
+     );
+    
+      if (userCheck.length === 0) {
+          return res.json({ done: false, message: "Usuario no encontrado" });
+      }
+
+      const [resultado] = await connection.execute(
+        "CALL CalcularPorcentajeAciertos(?, ?)",
+        [level_id, aciertos]
+      );
+
+      const porcentaje = resultado[0][0].porcentaje;  
+      const puntaje = aciertos * 200; // Calcular puntaje
+
+      // Definir inserción a la tabla IntentoNivel
+      const insertSQL = `
+          INSERT INTO IntentoNivel 
+          (id_usuario, id_nivel, puntaje, porcentaje_aciertos)
+          VALUES (?, ?, ?, ?)
+      `;
+
+      const values = [
+          id_usuario, level_id, puntaje, porcentaje
+      ];
+
+      await connection.execute(insertSQL, values);
+
+      console.log("✅ Intento de nivel guardado");
+      res.json({ done: true, message: "Intento de nivel guardado correctamente" });
+
+  } catch (err) {
+      console.error("❌ Error al registrar el intento del nivel:", err);
+      res.json({ done: false, message: "Error al registrar el intento del nivel" });
+  } finally {
+      if (connection) await connection.end();
+  }
+});
+
 // ==================== 🏠 Home pública ====================
 app.get("/home", (req, res) => {
   res.render("publicViews/home");
