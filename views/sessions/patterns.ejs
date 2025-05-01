@@ -1,6 +1,5 @@
 <%- include('../partials/header') %>
 
-<!-- Evita que la página se recargue desde caché si se vuelve atrás en el navegador -->
 <script>
   window.onpageshow = function(event) {
     if (event.persisted) {
@@ -10,7 +9,7 @@
 </script>
 
 <body>
-  <!-- Navbar superior -->
+  <!-- Barra de navegación -->
   <div class="menu-container">
     <%- include('../partials/navbar') %>
   </div>
@@ -18,26 +17,30 @@
   <!-- Contenido principal -->
   <main class="container-fluid py-4">
 
-    <!-- Encabezado de la sección -->
+    <!-- Título -->
     <div class="d-flex justify-content-between align-items-center mb-4 px-3">
       <div>
         <h1 class="fw-bold text-primary">📊 Usage Patterns</h1>
-        <p class="text-muted">Análisis detallado de patrones de uso y engagement</p>
+        <p class="text-muted">Detailed analysis of user behavior and engagement</p>
       </div>
     </div>
 
-    <!-- Gráfico tipo Gantt (sesiones por usuario en el tiempo) -->
-    <div class="card p-4">
-      <h4 class="text-secondary">📅 Gantt Chart</h4>
+    <!-- 📅 Gantt Chart -->
+    <div class="card p-4 mb-4">
+      <h4 class="text-secondary">📅 Session Timeline (Gantt Chart)</h4>
       <div id="ganttChartDiv" style="width: 100%; height: 400px;"></div>
     </div>
 
-    <!-- Heatmap de sesiones por hora y día -->
-    <div class="col-md-12 mb-4">
-      <div class="card p-4">
-        <h4 class="text-secondary">🌡️ Heatmap de Uso por Hora y Día</h4>
-        <div id="chartdiv" style="width: 100%; height: 500px;"></div>
-      </div>
+    <!-- 🌡️ Heatmap -->
+    <div class="card p-4 mb-4">
+      <h4 class="text-secondary">🌡️ Usage Heatmap (Day & Hour)</h4>
+      <div id="chartdiv" style="width: 100%; height: 500px;"></div>
+    </div>
+
+    <!-- 📶 Weekly Sessions -->
+    <div class="card p-4 mb-4">
+      <h4 class="text-secondary">📶 Weekly Session Trend</h4>
+      <div id="chartWeekTrend" style="width: 100%; height: 500px;"></div>
     </div>
 
   </main>
@@ -45,13 +48,16 @@
   <!-- Footer -->
   <%- include('../partials/footer') %>
 
-  <!-- Librerías amCharts (requeridas para el Gantt Chart) -->
+  <!-- Scripts para gráficos -->
   <script src="https://cdn.amcharts.com/lib/5/index.js"></script>
   <script src="https://cdn.amcharts.com/lib/5/xy.js"></script>
   <script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
 
-  <!-- Scripts personalizados para los gráficos -->
+  <!-- Scripts personalizados -->
   <script src="/js/charts/ganttChart.js"></script>
   <script src="/js/charts/heatmap.js"></script>
+  <script src="/js/charts/sessionsTrendChart.js"></script>
 
 </body>
+</html>
