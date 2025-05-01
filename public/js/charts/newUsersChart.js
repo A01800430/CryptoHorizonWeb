@@ -1,190 +1,172 @@
 /**
- * Script para visualizar nuevos usuarios por día con amCharts.
- * - Usa un gráfico de línea interactivo con la opción de dibujar otra serie personalizada.
- * - Incluye scroll, zoom, tooltip, puntos visibles y botón para limpiar el trazo.
+ * Script para renderizar un gráfico de línea con amCharts.
+ * - Muestra la cantidad de sesiones por día.
+ * - Soporta tema claro/oscuro dinámicamente.
+ * - Incluye scrollbar interactivo y estilo condicional por tendencia.
  */
 
 document.addEventListener("DOMContentLoaded", function () {
-  // Verifica que existan datos válidos en la variable global
-  if (!window.newUsersByDay || !Array.isArray(window.newUsersByDay)) return;
+  const sessionsByDay = window.sessionsByDay;
 
-  // Inicializa amCharts cuando el DOM esté listo
-  am5.ready(function () {
-    // Crea el root y aplica el tema animado
-    const root = am5.Root.new("newUsersChart");
-    root.setThemes([am5themes_Animated.new(root)]);
+  // Detectar si el tema actual es oscuro
+  function getThemeMode() {
+    return (
+      localStorage.getItem("theme") === "dark" ||
+      document.body.classList.contains("dark-mode")
+    );
+  }
 
-    // Crea el contenedor principal del gráfico
+  // Función principal para construir el gráfico
+  function createChart() {
+    // Destruir instancia previa si existe
+    if (window.sessionsRoot) window.sessionsRoot.dispose();
+    const root = am5.Root.new("sessionsChart");
+    window.sessionsRoot = root;
+
+    // Colores según el tema
+    const isDark = getThemeMode();
+    const upColor = am5.color(0x4caf50);
+    const downColor = am5.color(0xf44336);
+    const bulletFill = am5.color(0xffffff);
+    const bulletStroke = am5.color(0x000000);
+
+    const textColor = isDark ? 0xffffff : 0x000000;
+    const gridColor = isDark ? am5.color(0x666666) : am5.color(0xaaaaaa);
+    const backgroundColor = isDark ? 0x1e1e1e : 0xffffff;
+
+    // Establecer fondo del gráfico
+    root.container.setAll({
+      background: am5.Rectangle.new(root, {
+        fill: am5.color(backgroundColor),
+        fillOpacity: 1
+      })
+    });
+
+    // Tema personalizado (colores de texto y rejillas)
+    const theme = am5.Theme.new(root);
+    theme.rule("Label").setAll({ fill: am5.color(textColor) });
+    theme.rule("AxisLabel").setAll({ fill: am5.color(textColor) });
+    theme.rule("Grid").setAll({
+      stroke: gridColor,
+      strokeOpacity: 0.5,
+      strokeWidth: 1.2
+    });
+
+    root.setThemes([am5themes_Animated.new(root), theme]);
+
+    // Crear gráfico XY principal
     const chart = root.container.children.push(
       am5xy.XYChart.new(root, {
         panX: true,
         panY: true,
         wheelX: "panX",
         wheelY: "zoomX",
-        pinchZoomX: true,
-        paddingLeft: 0
+        pinchZoomX: true
       })
     );
 
-    // Personaliza los colores
-    chart.get("colors").set("step", 3);
+    // Configurar cursor (sin línea vertical)
+    const cursor = chart.set("cursor", am5xy.XYCursor.new(root, {
+      behavior: "none"
+    }));
+    cursor.lineY.set("visible", false);
 
     // Eje X (fechas)
-    const xAxis = chart.xAxes.push(
-      am5xy.DateAxis.new(root, {
-        maxDeviation: 0.3,
-        baseInterval: { timeUnit: "day", count: 1 },
-        renderer: am5xy.AxisRendererX.new(root, {
-          minorGridEnabled: true,
-          minGridDistance: 70
-        }),
-        tooltip: am5.Tooltip.new(root, {})
-      })
-    );
-
-    // Eje Y (cantidad de usuarios)
-    const yAxis = chart.yAxes.push(
-      am5xy.ValueAxis.new(root, {
-        maxDeviation: 0.3,
-        renderer: am5xy.AxisRendererY.new(root, {})
-      })
-    );
-
-    // Serie principal de nuevos usuarios
-    const series = chart.series.push(
-      am5xy.LineSeries.new(root, {
-        name: "New Users",
-        xAxis,
-        yAxis,
-        valueYField: "value",
-        valueXField: "date",
-        tooltip: am5.Tooltip.new(root, {
-          labelText: "{valueY}"
-        })
-      })
-    );
-
-    // Estilo visual de la línea y área
-    series.strokes.template.setAll({ strokeWidth: 2 });
-    series.fills.template.setAll({ fillOpacity: 0.2, visible: true });
-
-    // Puntos visibles en la serie
-    series.bullets.push(function () {
-      return am5.Bullet.new(root, {
-        sprite: am5.Circle.new(root, {
-          radius: 4,
-          fill: root.interfaceColors.get("background"),
-          stroke: series.get("stroke"),
-          strokeWidth: 2
-        })
-      });
-    });
-
-    // Procesamiento de datos: convierte fechas string a timestamps
-    const processedData = window.newUsersByDay.map((d) => ({
-      date: new Date(d.day).getTime(),
-      value: d.count
+    const xAxis = chart.xAxes.push(am5xy.DateAxis.new(root, {
+      baseInterval: { timeUnit: "day", count: 1 },
+      renderer: am5xy.AxisRendererX.new(root, {
+        minGridDistance: 70
+      }),
+      tooltip: am5.Tooltip.new(root, {})
     }));
-    series.data.setAll(processedData);
 
-    // Serie adicional que el usuario puede dibujar manualmente
-    const drawingSeries = chart.series.push(
-      am5xy.LineSeries.new(root, {
-        name: "Drawn Line",
-        xAxis,
-        yAxis,
-        valueYField: "value",
-        valueXField: "date"
+    // Eje Y (cantidad de sesiones)
+    const yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, {
+      renderer: am5xy.AxisRendererY.new(root, {})
+    }));
+
+    // Serie de líneas
+    const series = chart.series.push(am5xy.LineSeries.new(root, {
+      name: "Sessions",
+      xAxis,
+      yAxis,
+      valueYField: "value",
+      valueXField: "date",
+      tooltip: am5.Tooltip.new(root, {
+        labelText: "{valueY} sessions"
       })
-    );
+    }));
 
-    // Puntos arrastrables (invisibles) para moverlos
-    drawingSeries.bullets.push(function () {
-      const bullet = am5.Circle.new(root, {
-        radius: 6,
-        fillOpacity: 0,
-        fill: drawingSeries.get("fill"),
-        draggable: true,
-        cursorOverStyle: "pointer"
-      });
-      bullet.events.on("dragged", (e) => handleDrag(e));
-      return am5.Bullet.new(root, { sprite: bullet });
+    series.strokes.template.setAll({
+      strokeWidth: 4,
+      templateField: "strokeSettings"
     });
 
-    // Puntos visibles sobre la serie dibujada
-    drawingSeries.bullets.push(function () {
-      return am5.Bullet.new(root, {
+    // Marcadores (puntos) en la línea
+    series.bullets.push(() =>
+      am5.Bullet.new(root, {
         sprite: am5.Circle.new(root, {
           radius: 5,
-          fill: drawingSeries.get("fill")
+          fill: bulletFill,
+          strokeWidth: 2,
+          stroke: bulletStroke
         })
-      });
-    });
-
-    // Lógica para actualizar posición al arrastrar un punto
-    function handleDrag(e) {
-      const point = chart.plotContainer.toLocal(e.point);
-      const date = xAxis.positionToValue(xAxis.coordinateToPosition(point.x));
-      const value = yAxis.positionToValue(yAxis.coordinateToPosition(point.y));
-      const dataItem = e.target.dataItem;
-
-      dataItem.set("valueX", date);
-      dataItem.set("valueXWorking", date);
-      dataItem.set("valueY", value);
-      dataItem.set("valueYWorking", value);
-    }
-
-    // Agregar punto nuevo con clic en el área del gráfico
-    chart.plotContainer.get("background").events.on("click", function (e) {
-      const point = chart.plotContainer.toLocal(e.point);
-      const date = xAxis.positionToValue(xAxis.coordinateToPosition(point.x));
-      const value = yAxis.positionToValue(yAxis.coordinateToPosition(point.y));
-
-      drawingSeries.data.push({ date, value });
-      drawingSeries.setPrivate("endIndex", drawingSeries.data.length);
-      sortData();
-    });
-
-    // Ordena los puntos dibujados para que la línea sea continua
-    function sortData() {
-      drawingSeries.dataItems.sort((a, b) => a.get("valueX") - b.get("valueX"));
-    }
-
-    // Texto de ayuda en la esquina superior
-    chart.plotContainer.children.push(
-      am5.Label.new(root, {
-        x: 10,
-        y: 10,
-        text: "Click on plot area to draw a series",
-        fontSize: 14,
-        fill: am5.color(0x555555)
       })
     );
 
-    // Botón para borrar los puntos de la serie dibujada
-    const deleteBtn = document.createElement("button");
-    deleteBtn.textContent = "Clear Drawing";
-    deleteBtn.style.margin = "10px 0";
-    deleteBtn.className = "btn btn-sm btn-danger";
-    document.getElementById("newUsersChart").before(deleteBtn);
+    // Procesar datos con colores condicionales
+    const mappedData = [];
+    let prev = null;
 
-    deleteBtn.addEventListener("click", () => {
-      drawingSeries.data.setAll([]);
+    sessionsByDay.forEach(({ day, count }, i) => {
+      const value = count;
+      const date = new Date(day).getTime();
+
+      if (i > 0) {
+        const stroke = value < prev ? downColor : upColor;
+        mappedData[mappedData.length - 1].strokeSettings = { stroke };
+      }
+
+      mappedData.push({ date, value });
+      prev = value;
     });
 
-    // Cursor interactivo
-    chart.set("cursor", am5xy.XYCursor.new(root, {
-      xAxis: xAxis,
-      behavior: "zoomX"
+    series.data.setAll(mappedData);
+
+    // Scrollbar con vista previa
+    const scrollbar = chart.set("scrollbarX", am5xy.XYChartScrollbar.new(root, {
+      orientation: "horizontal",
+      height: 60
     }));
 
-    // Scrollbar horizontal
-    chart.set("scrollbarX", am5.Scrollbar.new(root, {
-      orientation: "horizontal"
+    const sbDateAxis = scrollbar.chart.xAxes.push(am5xy.DateAxis.new(root, {
+      baseInterval: { timeUnit: "day", count: 1 },
+      renderer: am5xy.AxisRendererX.new(root, {})
     }));
+
+    const sbValueAxis = scrollbar.chart.yAxes.push(am5xy.ValueAxis.new(root, {
+      renderer: am5xy.AxisRendererY.new(root, {})
+    }));
+
+    const sbSeries = scrollbar.chart.series.push(am5xy.LineSeries.new(root, {
+      valueYField: "value",
+      valueXField: "date",
+      xAxis: sbDateAxis,
+      yAxis: sbValueAxis
+    }));
+
+    sbSeries.data.setAll(mappedData);
 
     // Animación de aparición
     series.appear(1000);
     chart.appear(1000, 100);
+  }
+
+  // Crear gráfico al cargar la página
+  createChart();
+
+  // Recrear gráfico al cambiar de tema
+  document.getElementById("themeToggle")?.addEventListener("click", () => {
+    setTimeout(() => createChart(), 300);
   });
 });
