@@ -415,20 +415,20 @@ app.post("/forgot", async (req, res) => {
     console.log("📬 Respuesta de Resend:", response);
 
     if (response.error) {
-      return res.render("forgot", {
+      return res.render("auth/forgot", {
         success: null,
         error: "❌ Failed to send email. Please try again later.",
       });
     }
 
-    return res.render("forgot", {
+    return res.render("auth/forgot", {
       success: "📧 Email sent! Check your inbox to reset your password.",
       error: null,
     });
 
   } catch (err) {
     console.error("❌ Error general en /forgot:", err);
-    return res.render("forgot", {
+    return res.render("auth/forgot", {
       success: null,
       error: "❌ Something went wrong. Please try again later.",
     });
