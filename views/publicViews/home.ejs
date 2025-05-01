@@ -2,6 +2,30 @@
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
+<!-- Video de fondo -->
+<video autoplay muted loop playsinline id="bg-video">
+  <source src="/img/background.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+
+<style>
+  #bg-video {
+    position: fixed;
+    top: 0;
+    left: 0;
+    min-width: 100vw;
+    min-height: 100vh;
+    object-fit: cover;
+    z-index: -1;
+  }
+
+  .menu-container,
+  .container {
+    position: relative;
+    z-index: 1;
+  }
+</style>
+
 <div class="menu-container">
   <%- include('../partials/navbar_public') %>
 </div>
@@ -19,4 +43,5 @@
 
 <%- include('../partials/footer') %>
 </body>
+
 
