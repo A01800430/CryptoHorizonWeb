@@ -74,8 +74,8 @@ app.post("/loginUser", async (req, res) => {
     const { username, pass } = req.body;
 
     if (!username || !pass) {
-        console.warn("⚠️ Faltan campos para login:", req.body);
-        return res.json({ done: false, message: "Faltan datos" });
+        console.warn("⚠️ Fields missing for login:", req.body);
+        return res.json({ done: false, message: "Data missing" });
     }
 
     let connection;
@@ -89,16 +89,16 @@ app.post("/loginUser", async (req, res) => {
         );
 
         if (result.length === 0 || result[0].password !== passHash) {
-            return res.json({ done: false, message: "Credenciales incorrectas" });
+            return res.json({ done: false, message: "Incorrect credentials" });
         }
 
         const user = result[0];
         console.log("✅ Login correcto:", username);
-        return res.json({ done: true, message: "Login exitoso. Bienvenido!", userId: user.id_usuario });
+        return res.json({ done: true, message: "Login successful. Welcome!", userId: user.id_usuario });
 
     } catch (err) {
-        console.error("❌ Error al buscar usuario:", err);
-        return res.json({ done: false, message: "Error en el servidor" });
+        console.error("❌ Error searching for user:", err);
+        return res.json({ done: false, message: "Server error" });
     } finally {
         if (connection) await connection.end();
     }
@@ -112,12 +112,12 @@ app.post("/createUser", async (req, res) => {
     } = req.body;
 
     if (!username || !email || !pass) {
-        return res.json({ done: false, message: "Faltan campos" });
+        return res.json({ done: false, message: "Fields missing" });
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-        return res.json({ done: false, message: "Correo no válido" });
+        return res.json({ done: false, message: "Invalid email" });
     }
 
     const passHash = crypto.createHash("sha256").update(pass).digest("hex");
@@ -131,7 +131,7 @@ app.post("/createUser", async (req, res) => {
             [username]
         );
         if (userCheck.length > 0) {
-            return res.json({ done: false, message: "El usuario ya existe" });
+            return res.json({ done: false, message: "User already exists" });
         }
 
         const [emailCheck] = await connection.execute(
@@ -139,7 +139,7 @@ app.post("/createUser", async (req, res) => {
             [email]
         );
         if (emailCheck.length > 0) {
-            return res.json({ done: false, message: "El correo ya está registrado" });
+            return res.json({ done: false, message: "The email is already registered" });
         }
 
         const insertSQL = `
@@ -156,12 +156,12 @@ app.post("/createUser", async (req, res) => {
 
         await connection.execute(insertSQL, values);
 
-        console.log("✅ Usuario registrado:", username);
-        res.json({ done: true, message: "Usuario creado con éxito" });
+        console.log("✅ User registered:", username);
+        res.json({ done: true, message: "User created successfully" });
 
     } catch (err) {
-        console.error("❌ Error al registrar:", err);
-        res.json({ done: false, message: "Error al registrar el usuario" });
+        console.error("❌ Error registering:", err);
+        res.json({ done: false, message: "Error registering user" });
     } finally {
         if (connection) await connection.end();
     }
@@ -175,16 +175,16 @@ app.post("/createAdmin", async (req, res) => {
   } = req.body;
 
   if (master_pass !== process.env.MASTER_PASS) {
-      return res.json({ done: false, message: "Acceso no autorizado" });
+      return res.json({ done: false, message: "Unauthorized access" });
   }
 
   if (!username || !email || !pass) {
-      return res.json({ done: false, message: "Faltan campos" });
+      return res.json({ done: false, message: "Fields missing" });
   }
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
-      return res.json({ done: false, message: "Correo no válido" });
+      return res.json({ done: false, message: "Invalid email" });
   }
 
   const passHash = crypto.createHash("sha256").update(pass).digest("hex");
@@ -198,7 +198,7 @@ app.post("/createAdmin", async (req, res) => {
           [username]
       );
       if (userCheck.length > 0) {
-          return res.json({ done: false, message: "El usuario ya existe" });
+          return res.json({ done: false, message: "User already exists" });
       }
 
       const [emailCheck] = await connection.execute(
@@ -206,7 +206,7 @@ app.post("/createAdmin", async (req, res) => {
           [email]
       );
       if (emailCheck.length > 0) {
-          return res.json({ done: false, message: "El correo ya está registrado" });
+          return res.json({ done: false, message: "The email is already registered" });
       }
 
       const insertSQL = `
@@ -223,12 +223,12 @@ app.post("/createAdmin", async (req, res) => {
 
       await connection.execute(insertSQL, values);
 
-      console.log("👑 Administrador registrado:", username);
-      res.json({ done: true, message: "Administrador creado con éxito" });
+      console.log("👑 Admin registered:", username);
+      res.json({ done: true, message: "Admin registered successfully" });
 
   } catch (err) {
-      console.error("❌ Error al registrar administrador:", err);
-      res.json({ done: false, message: "Error al registrar el administrador" });
+      console.error("❌ Error registering admin:", err);
+      res.json({ done: false, message: "Error registering admin" });
   } finally {
       if (connection) await connection.end();
   }
@@ -249,19 +249,19 @@ app.post("/register", async (req, res) => {
 
       if (result.done) {
         return res.render("auth/register", {
-          success: "✅ Administrador creado correctamente. Ya puedes iniciar sesión.",
+          success: "✅ Administrator created successfully. You can now log in.",
           error: null
         });
       } else {
         return res.render("auth/register", {
-          error: result.message || "Error al registrar",
+          error: result.message || "Error registering",
           success: null
         });
       }
     } catch (err) {
       console.error("❌ Error en registro web:", err);
       return res.render("dashboard/register", {
-        error: "Error del servidor",
+        error: "Server error",
         success: null
       });
     }
@@ -272,14 +272,14 @@ app.post("/saveSession", async (req, res) => {
     const { id_usuario, startTime, endTime } = req.body;
 
     if (!id_usuario || !startTime || !endTime) {
-        return res.json({ done: false, message: "Datos incompletos" });
+        return res.json({ done: false, message: "Incomplete data" });
     }
 
     const start = new Date(startTime);
     const end = new Date(endTime);
 
     if (isNaN(start) || isNaN(end)) {
-        return res.json({ done: false, message: "Fechas inválidas" });
+        return res.json({ done: false, message: "Invalid dates" });
     }
 
     const duration = Math.floor((end - start) / 1000);
@@ -294,12 +294,12 @@ app.post("/saveSession", async (req, res) => {
 
         await connection.execute(sql, [id_usuario, startTime, endTime, duration]);
 
-        console.log(`📦 Sesión guardada: ${id_usuario}, duración: ${duration}s`);
-        res.json({ done: true, message: "Sesión registrada correctamente." });
+        console.log(`📦 Session saved: ${id_usuario}, duration: ${duration}s`);
+        res.json({ done: true, message: "Session saved." });
 
     } catch (err) {
-        console.error("❌ Error al guardar sesión:", err);
-        res.json({ done: false, message: "Error al guardar la sesión" });
+        console.error("❌ Error saving:", err);
+        res.json({ done: false, message: "Error saving session" });
     } finally {
         if (connection) await connection.end();
     }
@@ -455,7 +455,7 @@ app.get("/reset-password", (req, res) => {
       return res.status(400).send("Token expired or invalid.");
     }
   } catch (err) {
-    return res.status(400).send("Token inválido.");
+    return res.status(400).send("Invalid Token.");
   }
 
   // Mostrar el formulario correctamente
@@ -506,7 +506,7 @@ app.post("/reset-password", async (req, res) => {
 
     return res.render("dashboard/reset-password", {
       token: null,
-      success: "✅ Contraseña actualizada correctamente. Ya puedes iniciar sesión.",
+      success: "✅ Password updated successfully. You can now log in.",
       error: null
     });
 
@@ -902,7 +902,7 @@ app.get("/users/users/:id", async (req, res) => {
       [userId]
     );
 
-    if (!user) return res.status(404).send("Usuario no encontrado");
+    if (!user) return res.status(404).send("User not found");
 
     res.render("users/details", {
       username: req.session.username,
@@ -911,8 +911,8 @@ app.get("/users/users/:id", async (req, res) => {
     });
 
   } catch (err) {
-    console.error("❌ Error al cargar perfil:", err);
-    res.status(500).send("Error al cargar usuario");
+    console.error("❌ Error loading profile", err);
+    res.status(500).send("Error loading profile");
   } finally {
     if (connection) await connection.end();
   }
@@ -928,7 +928,7 @@ app.post("/saveLevelCompleted", async (req, res) => { // Esta ruta registra los 
 
   if (!id_usuario || !level_id || aciertos === undefined) {
     console.log('❌ Error: Valores requeridos faltantes');
-    return res.json({ done: false, message: "Faltan campos" });
+    return res.json({ done: false, message: "Fields missing" });
   }
 
   // Conecta a la base de datos
@@ -942,7 +942,7 @@ app.post("/saveLevelCompleted", async (req, res) => { // Esta ruta registra los 
      );
     
       if (userCheck.length === 0) {
-          return res.json({ done: false, message: "Usuario no encontrado" });
+          return res.json({ done: false, message: "User not found" });
       }
 
       const [resultado] = await connection.execute(
@@ -966,12 +966,12 @@ app.post("/saveLevelCompleted", async (req, res) => { // Esta ruta registra los 
 
       await connection.execute(insertSQL, values);
 
-      console.log("✅ Intento de nivel guardado");
-      res.json({ done: true, message: "Intento de nivel guardado correctamente" });
+      console.log("✅ Saved level attempt");
+      res.json({ done: true, message: "Saved level attempt successfully" });
 
   } catch (err) {
-      console.error("❌ Error al registrar el intento del nivel:", err);
-      res.json({ done: false, message: "Error al registrar el intento del nivel" });
+      console.error("❌ Error registering level attempt:", err);
+      res.json({ done: false, message: "Error registering level attempt" });
   } finally {
       if (connection) await connection.end();
   }
@@ -980,14 +980,14 @@ app.post("/saveLevelCompleted", async (req, res) => { // Esta ruta registra los 
 // ======================= Get relevant data to load user progress =======================
 app.post("/getUserProgress", async (req, res) => { // Esta ruta regresa una tabla con los mejores intentos por nivel del usuario
   console.log('⭐ INICIO: getUserProgress');
-  console.log('Datos recibidos:', req.body);
+  console.log('Data received:', req.body);
 
   // Recibe de Unity el id del usuario, el id del nivel y el número de aciertos en el quiz
   const {id_usuario} = req.body;
 
   if (!id_usuario) {
-    console.log('❌ Error: ID requerido faltante');
-    return res.json({ done: false, message: "Falta ID de usuario" });
+    console.log('❌ Error: Missing required ID');
+    return res.json({ done: false, message: "User ID missing" });
   }
 
   // Conecta a la base de datos
@@ -1001,7 +1001,7 @@ app.post("/getUserProgress", async (req, res) => { // Esta ruta regresa una tabl
      );
     
       if (userCheck.length === 0) {
-          return res.json({ done: false, message: "Usuario no encontrado" });
+          return res.json({ done: false, message: "User not found" });
       }
 
       const [resultado] = await connection.execute(
@@ -1009,16 +1009,16 @@ app.post("/getUserProgress", async (req, res) => { // Esta ruta regresa una tabl
         [id_usuario]
       );
 
-      console.log("✅ Progreso obtenido:", resultado);
+      console.log("✅ Progress obtained:", resultado);
       res.json({ 
           done: true, 
-          message: "Progreso obtenido correctamente",
+          message: "Progress obtained successfully",
           progress: resultado
       });
 
   } catch (err) {
-      console.error("❌ Error al obtener el progreso", err);
-      res.json({ done: false, message: "Error al obtener el progreso" });
+      console.error("❌ Error obtaining progress", err);
+      res.json({ done: false, message: "Error obtaining progress" });
   } finally {
       if (connection) await connection.end();
   }
@@ -1043,13 +1043,13 @@ app.get("/generateLeaderboard", async (req, res) => { // Esta ruta llama a un pr
 
       res.json({ 
           done: true, 
-          message: "Progreso obtenido correctamente",
+          message: "Progress obtained successfully",
           leaderboard: leaderboard[0]
       });
 
   } catch (err) {
-      console.error("❌ Error al obtener el leaderboard", err);
-      res.json({ done: false, message: "Error al obtener el leaderboard" });
+      console.error("❌ Error obtaining leaderboard", err);
+      res.json({ done: false, message: "Error obtaining leaderboard" });
   } finally {
       if (connection) await connection.end();
   }
@@ -1069,7 +1069,7 @@ app.listen(port, () => {
 app.get("/logout", (req, res) => {
   req.session.destroy((err) => {
     if (err) {
-      return res.status(500).json({ message: "Error al cerrar sesión." });
+      return res.status(500).json({ message: "Error logging out." });
     }
     res.redirect("/login");
   });
@@ -1078,7 +1078,7 @@ app.get("/logout", (req, res) => {
 app.post("/logout", (req, res) => {
   req.session.destroy((err) => {
       if (err) {
-          return res.status(500).json({ message: "Error al cerrar sesión." });
+          return res.status(500).json({ message: "Error logging out." });
       }
       res.redirect("/login");
   });
