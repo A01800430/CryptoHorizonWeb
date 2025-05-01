@@ -9,7 +9,7 @@
 }
 
 /* === Fondo de puntitos tipo grid minimalista === */
-body:not(.home-page) {
+body {
   font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   color: #333;
   margin: 0;
@@ -19,36 +19,6 @@ body:not(.home-page) {
   background-color: var(--bg-light);
   background-image: radial-gradient(rgba(153, 119, 85, 0.3) 1.2px, transparent 1.2px);
   background-size: 25px 25px;
-}
-
-/* === Video de fondo solo en la home === */
-.home-page #bg-video {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  object-fit: cover;
-  z-index: -1;
-}
-
-/* === Contenido por encima del video === */
-.home-page .menu-container,
-.home-page .container {
-  position: relative;
-  z-index: 1;
-}
-
-/* === Opcional: capa oscura encima del video para mejor contraste === */
-.home-page::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.4); /* cambia la opacidad aquí */
-  z-index: 0;
 }
 
 /* Modo oscuro: puntos blancos */
