@@ -480,7 +480,7 @@ app.post("/reset-password", async (req, res) => {
     payload = JSON.parse(decoded);
 
     if (!payload.email || !payload.exp || Date.now() > payload.exp) {
-      return res.render("dashboard/reset-password", {
+      return res.render("auth/reset-password", {
         token: null,
         error: "The link has expired or is invalid",
         success: null
@@ -504,7 +504,7 @@ app.post("/reset-password", async (req, res) => {
       [hashed, payload.email]
     );
 
-    return res.render("dashboard/reset-password", {
+    return res.render("auth/reset-password", {
       token: null,
       success: "✅ Password updated successfully. You can now log in.",
       error: null
@@ -512,7 +512,7 @@ app.post("/reset-password", async (req, res) => {
 
   } catch (err) {
     console.error("❌ Error al restablecer contraseña:", err);
-    return res.render("dashboard/reset-password", {
+    return res.render("auth/reset-password", {
       token,
       error: "Server error",
       success: null
