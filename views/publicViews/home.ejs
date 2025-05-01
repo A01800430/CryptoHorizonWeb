@@ -38,7 +38,17 @@
   font-size: 1.5rem;
   margin-right: 0.5rem;
 }
-
+.dark-mode .home-text {
+  text-shadow:
+    1px 0 black,
+   -1px 0 black,
+    0 1px black,
+    0 -1px black,
+    1px 1px black,
+   -1px -1px black,
+    1px -1px black,
+   -1px 1px black;
+}
 </style>
 
 <div class="menu-container">
@@ -49,7 +59,7 @@
 <div class="container text-center mt-5">
   <img src="/img/Title.png" alt="CryptoHorizon Title" class="img-fluid" style="width: 1000px; height: auto; margin-bottom: 20px;">
   
-  <h5>Are you ready to learn Crypto while having fun?</h5>
+  <h5 class="home-text">Are you ready to learn Crypto while having fun?</h5>
 
   <a href="/game" class="btn btn-danger mt-3">
     <i class="fas fa-play"></i> PLAY
@@ -57,7 +67,7 @@
 </div>
 
 <div class="container text-center my-5" style="margin-top: 80px;">
-  <p>Are you an admin? <a href="/login">Login</a></p>
+  <p class="home-text">Are you an admin? </p><a href="/login">Login</a>
 </div>
 
 <%- include('../partials/footer') %>

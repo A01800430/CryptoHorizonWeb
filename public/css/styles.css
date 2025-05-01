@@ -868,5 +868,21 @@ body.dark-mode #scrollUpBtn {
   transition: all 0.3s ease-in-out;
 }
 
+/* Estilos forzados para leaderboard */
+.leaderboard-table tbody tr.gold-row td {
+  background-color: #fff9db !important;
+  color: #b8860b !important;
+  font-weight: bold !important;
+}
 
+.leaderboard-table tbody tr.silver-row td {
+  background-color: #f1f1f1 !important;
+  color: #7c7c7c !important;
+  font-weight: bold !important;
+}
 
+.leaderboard-table tbody tr.bronze-row td {
+  background-color: #fce8d5 !important;
+  color: #b87333 !important;
+  font-weight: bold !important;
+}
