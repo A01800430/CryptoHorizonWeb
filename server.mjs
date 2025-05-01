@@ -387,7 +387,7 @@ app.post("/forgot", async (req, res) => {
     );
 
     if (result.length === 0) {
-      return res.render("forgot", {
+      return res.render("auth/forgot", {
         success: null,
         error: "❌ This email is not registered.",
       });
