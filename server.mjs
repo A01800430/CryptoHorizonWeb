@@ -371,7 +371,7 @@ app.post("/forgot", async (req, res) => {
   const { email } = req.body;
 
   if (!email) {
-    return res.render("forgot", {
+    return res.render("auth/forgot", {
       success: null,
       error: "📭 Email is required",
     });
