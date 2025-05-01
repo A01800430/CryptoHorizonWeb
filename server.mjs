@@ -526,125 +526,159 @@ app.post("/reset-password", async (req, res) => {
 
 // ======================= 📊 Dashboard =======================
 app.get("/dashboard", async (req, res) => {
-    if (!req.session.authenticated) {
-        return res.redirect("/login");
-    }
+  if (!req.session.authenticated) {
+      return res.redirect("/login");
+  }
 
-    res.setHeader('Cache-Control', 'no-store');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
+  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
 
-    const sql = {
-        users: `
-            SELECT u.userName, u.country, u.deviceModel, u.platform, s.startTime, s.endTime,
-                TIMESTAMPDIFF(MINUTE, s.startTime, s.endTime) AS duration_min
-            FROM Usuario u
-            LEFT JOIN Sesion s ON u.id_usuario = s.id_usuario
-            WHERE s.startTime IS NOT NULL
-            ORDER BY s.startTime DESC
-            LIMIT 15
-        `,
-        totalUsers: `SELECT COUNT(*) AS total FROM Usuario`,
-        avgSession: `SELECT ROUND(AVG(duration_seconds)/60, 2) AS avg FROM Sesion`,
-        countries: `SELECT COUNT(DISTINCT country) AS total FROM Usuario`,
-        activeToday: `
-            SELECT COUNT(*) AS total
-            FROM Sesion
-            WHERE DATE(startTime) = DATE(CONVERT_TZ(NOW(), '+00:00', '-06:00'));
-        `,
-        thisWeek: `
-            SELECT COUNT(*) AS total
-            FROM Sesion
-            WHERE startTime >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
-        `,
-        topDevice: `
-            SELECT deviceModel, COUNT(*) AS total
-            FROM Usuario
-            GROUP BY deviceModel
-            ORDER BY total DESC
-            LIMIT 1
-        `,
-        topLanguage: `
-            SELECT systemLanguage, COUNT(*) AS total
-            FROM Usuario
-            GROUP BY systemLanguage
-            ORDER BY total DESC
-            LIMIT 1
-        `,
-        topPlatform: `
-            SELECT platform, COUNT(*) AS total
-            FROM Usuario
-            GROUP BY platform
-            ORDER BY total DESC
-            LIMIT 1
-        `,
-        sessionsByDay: `
-            SELECT DATE(startTime) as day, COUNT(*) AS count
-            FROM Sesion
-            WHERE startTime >= DATE_SUB(CURDATE(), INTERVAL 15 DAY)
-            GROUP BY day
-            ORDER BY day ASC
-        `,
-        countriesPie: `
-            SELECT country, COUNT(*) AS total
-            FROM Usuario
-            GROUP BY country
-            ORDER BY total DESC
-            LIMIT 10
-        `,
-        durationHistogram: `
-            SELECT FLOOR(duration_seconds / 60) AS duration_min, COUNT(*) AS count
-            FROM Sesion
-            GROUP BY duration_min
-            ORDER BY duration_min
-        `,
-        genderPlatform: `
-            SELECT gender, platform, COUNT(*) AS total
-            FROM Usuario
-            GROUP BY gender, platform
-        `,
-        genderCount: `
-              SELECT gender, COUNT(*) AS total
-              FROM Usuario
-              GROUP BY gender
-            `
-    };
+  const sql = {
+      users: `
+          SELECT u.userName, u.country, u.deviceModel, u.platform, s.startTime, s.endTime,
+              TIMESTAMPDIFF(MINUTE, s.startTime, s.endTime) AS duration_min
+          FROM Usuario u
+          LEFT JOIN Sesion s ON u.id_usuario = s.id_usuario
+          WHERE s.startTime IS NOT NULL
+          ORDER BY s.startTime DESC
+          LIMIT 15
+      `,
+      totalUsers: `SELECT COUNT(*) AS total FROM Usuario`,
+      avgSession: `SELECT ROUND(AVG(duration_seconds)/60, 2) AS avg FROM Sesion`,
+      countries: `SELECT COUNT(DISTINCT country) AS total FROM Usuario`,
+      activeToday: `
+          SELECT COUNT(*) AS total
+          FROM Sesion
+          WHERE DATE(startTime) = DATE(CONVERT_TZ(NOW(), '+00:00', '-06:00'));
+      `,
+      thisWeek: `
+          SELECT COUNT(*) AS total
+          FROM Sesion
+          WHERE startTime >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+      `,
+      topDevice: `
+          SELECT deviceModel, COUNT(*) AS total
+          FROM Usuario
+          GROUP BY deviceModel
+          ORDER BY total DESC
+          LIMIT 1
+      `,
+      topLanguage: `
+          SELECT systemLanguage, COUNT(*) AS total
+          FROM Usuario
+          GROUP BY systemLanguage
+          ORDER BY total DESC
+          LIMIT 1
+      `,
+      topPlatform: `
+          SELECT platform, COUNT(*) AS total
+          FROM Usuario
+          GROUP BY platform
+          ORDER BY total DESC
+          LIMIT 1
+      `,
+      sessionsByDay: `
+          SELECT DATE(startTime) as day, COUNT(*) AS count
+          FROM Sesion
+          WHERE startTime >= DATE_SUB(CURDATE(), INTERVAL 15 DAY)
+          GROUP BY day
+          ORDER BY day ASC
+      `,
+      countriesPie: `
+          SELECT country, COUNT(*) AS total
+          FROM Usuario
+          GROUP BY country
+          ORDER BY total DESC
+          LIMIT 10
+      `,
+      durationHistogram: `
+          SELECT FLOOR(duration_seconds / 60) AS duration_min, COUNT(*) AS count
+          FROM Sesion
+          GROUP BY duration_min
+          ORDER BY duration_min
+      `,
+      genderPlatform: `
+          SELECT gender, platform, COUNT(*) AS total
+          FROM Usuario
+          GROUP BY gender, platform
+      `,
+      genderCount: `
+          SELECT gender, COUNT(*) AS total
+          FROM Usuario
+          GROUP BY gender
+      `,
+      accuracyPerLevel: `
+          SELECT n.nombre AS levelName, ROUND(AVG(i.porcentaje_aciertos), 2) AS avgAccuracy
+          FROM IntentoNivel i
+          JOIN Nivel n ON i.id_nivel = n.id_nivel
+          GROUP BY n.nombre
+          ORDER BY n.id_nivel;
+      `,
+      logrosPorNivel: `
+          SELECT 
+              n.nombre AS nivel,
+              l.nombre AS logro,
+              ROUND(COUNT(*) * 100.0 / (
+                  SELECT COUNT(*) 
+                  FROM IntentoNivel i2 
+                  WHERE i2.id_nivel = i.id_nivel
+              ), 1) AS porcentaje
+          FROM LogroUsuario lu
+          JOIN Logro l ON l.id_logro = lu.id_logro
+          JOIN Usuario u ON u.id_usuario = lu.id_usuario
+          JOIN IntentoNivel i ON i.id_usuario = u.id_usuario
+          JOIN Nivel n ON i.id_nivel = n.id_nivel
+          GROUP BY n.nombre, l.nombre
+          ORDER BY n.nombre, l.id_logro
+      `,
+      newUsersByDay: `
+          SELECT DATE(creationDate) AS day, COUNT(*) AS count
+          FROM Usuario
+          WHERE creationDate >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+          GROUP BY day
+          ORDER BY day ASC
+      `
+  };
 
-    let connection;
-    try {
-        connection = await getDBConnection();
+  let connection;
+  try {
+      connection = await getDBConnection();
+      const results = {};
+      for (const [key, query] of Object.entries(sql)) {
+          const [rows] = await connection.execute(query);
+          results[key] = rows;
+      }
 
-        const results = {};
-        for (const [key, query] of Object.entries(sql)) {
-            const [rows] = await connection.execute(query);
-            results[key] = rows;
-        }
+      res.render("dashboard/index", {
+          username: req.session.username,
+          users: results.users,
+          totalUsers: results.totalUsers[0]?.total ?? 0,
+          avgSession: results.avgSession[0]?.avg ?? 0,
+          countries: results.countries[0]?.total ?? 0,
+          activeToday: results.activeToday[0]?.total ?? 0,
+          sessionsThisWeek: results.thisWeek[0]?.total ?? 0,
+          topDevice: results.topDevice[0]?.deviceModel ?? "N/A",
+          topLanguage: results.topLanguage[0]?.systemLanguage ?? "N/A",
+          topPlatform: results.topPlatform[0]?.platform ?? "N/A",
+          sessionsByDay: results.sessionsByDay,
+          countriesPie: results.countriesPie,
+          durationHistogram: results.durationHistogram,
+          genderPlatform: results.genderPlatform,
+          genderCount: results.genderCount,
+          accuracyPerLevel: results.accuracyPerLevel,
+          logrosPorNivel: results.logrosPorNivel,
+          newUsersByDay: results.newUsersByDay
+      });
 
-        res.render("dashboard/index", {
-            username: req.session.username,
-            users: results.users,
-            totalUsers: results.totalUsers[0]?.total ?? 0,
-            avgSession: results.avgSession[0]?.avg ?? 0,
-            countries: results.countries[0]?.total ?? 0,
-            activeToday: results.activeToday[0]?.total ?? 0,
-            sessionsThisWeek: results.thisWeek[0]?.total ?? 0,
-            topDevice: results.topDevice[0]?.deviceModel ?? "N/A",
-            topLanguage: results.topLanguage[0]?.systemLanguage ?? "N/A",
-            topPlatform: results.topPlatform[0]?.platform ?? "N/A",
-            sessionsByDay: results.sessionsByDay,
-            countriesPie: results.countriesPie,
-            durationHistogram: results.durationHistogram,
-            genderPlatform: results.genderPlatform,
-            genderCount: results.genderCount
-        });
-
-    } catch (err) {
-        console.error("❌ Error en dashboard:", err);
-        res.status(500).send("Error en el dashboard");
-    } finally {
-        if (connection) await connection.end();
-    }
+  } catch (err) {
+      console.error("❌ Error en dashboard:", err);
+      res.status(500).send("Error en el dashboard");
+  } finally {
+      if (connection) await connection.end();
+  }
 });
+
 
 // ======================= 📈 Rutas de visualización (patterns) =======================
 app.get("/sessions/patterns/data", async (req, res) => {

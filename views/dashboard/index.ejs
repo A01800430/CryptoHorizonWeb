@@ -79,6 +79,32 @@
       <div id="genderChartCanvas" style="width: 100%; height: 400px;"></div>
     </div>
   </section>
+  
+  
+    
+    <!-- Gráfico: Precisión promedio por nivel -->
+  <section class="mb-5 animate__animated animate__fadeInUp animate__delay-1-4s">
+    <h4 class="text-primary mb-3 text-center">📊 Average Accuracy per Level</h4>
+    <div class="chart-container neumorphism d-flex justify-content-center align-items-center" style="max-width: 800px; margin: auto; padding: 20px;">
+      <div id="accuracyChart" style="width: 100%; height: 400px;"></div>
+    </div>
+  </section>
+  
+  <section class="mb-5 animate__animated animate__fadeInUp animate__delay-1-5s">
+  <h4 class="text-primary mb-3 text-center">🏆 Achievement Distribution by Level</h4>
+  <div class="chart-container neumorphism d-flex justify-content-center align-items-center" style="max-width: 800px; margin: auto; padding: 20px;">
+    <div id="achievementsChart" style="width: 100%; height: 500px;"></div>
+  </div>
+</section>
+
+<!-- Gráfico: Nuevos usuarios por día -->
+<section class="mb-5 animate__animated animate__fadeInUp animate__delay-1-5s">
+  <h4 class="text-primary mb-3 text-center">📈 New Users Over Time</h4>
+  <div class="chart-container neumorphism" style="height: 500px;">
+    <div id="newUsersChart" style="width: 100%; height: 100%;"></div>
+  </div>
+</section>
+
 
   <!-- Tabla: Sesiones recientes -->
   <section class="mt-5 animate__animated animate__fadeInUp animate__delay-1-4s">
@@ -112,7 +138,7 @@
       </table>
     </div>
   </section>
-
+  
 </main>
 
 <!-- Variables globales para los gráficos -->
@@ -120,7 +146,13 @@
   window.countriesData = <%- JSON.stringify(countriesPie) %>;
   window.sessionsByDay = <%- JSON.stringify(sessionsByDay) %>;
   window.genderCountData = <%- JSON.stringify(genderCount) %>;
+  window.accuracyPerLevel = <%- JSON.stringify(accuracyPerLevel) %>; 
+  window.logrosPorNivel = <%- JSON.stringify(logrosPorNivel) %>;
+  window.newUsersByDay = <%- JSON.stringify(newUsersByDay) %>;
 </script>
+
+
+
 
 <!-- Librerías amCharts -->
 <script src="https://cdn.amcharts.com/lib/5/index.js"></script>
@@ -136,6 +168,10 @@
 <script src="/js/utils/countryCodes.js"></script>
 <script src="/js/charts/mapChart.js"></script>
 <script src="/js/charts/sessionsChart.js"></script>
+<script src="/js/charts/accuracyChart.js"></script>
+<script src="/js/charts/achievementsPerLevel.js"></script>
+<script src="/js/charts/newUsersChart.js"></script>
+
 
 <!-- Botón de scroll hacia arriba -->
 <button id="scrollUpBtn" title="Back to top">
