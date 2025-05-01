@@ -1,3 +1,4 @@
+<% bodyClass = 'home-page' %>
 <%- include('../partials/header') %>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -7,24 +8,6 @@
   <source src="/img/background.mp4" type="video/mp4">
   Your browser does not support the video tag.
 </video>
-
-<style>
-  #bg-video {
-    position: fixed;
-    top: 0;
-    left: 0;
-    min-width: 100vw;
-    min-height: 100vh;
-    object-fit: cover;
-    z-index: -1;
-  }
-
-  .menu-container,
-  .container {
-    position: relative;
-    z-index: 1;
-  }
-</style>
 
 <div class="menu-container">
   <%- include('../partials/navbar_public') %>
@@ -39,6 +22,10 @@
   <a href="/game" class="btn btn-danger mt-3">
     <i class="fas fa-play"></i> PLAY
   </a>
+</div>
+
+<div>
+  <p class="text-center mt-3">Are you an admin? <a href="/login">Login</a></p>
 </div>
 
 <%- include('../partials/footer') %>
