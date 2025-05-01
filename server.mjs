@@ -530,14 +530,14 @@ app.get("/dashboard", async (req, res) => {
       return res.redirect("/login");
   }
 
-  res.setHeader('Cache-Control', 'no-store');
-  res.setHeader('Pragma', 'no-cache');
-  res.setHeader('Expires', '0');
+  res.setHeader("Cache-Control", "no-store");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
 
   const sql = {
       users: `
           SELECT u.userName, u.country, u.deviceModel, u.platform, s.startTime, s.endTime,
-              TIMESTAMPDIFF(MINUTE, s.startTime, s.endTime) AS duration_min
+                 TIMESTAMPDIFF(MINUTE, s.startTime, s.endTime) AS duration_min
           FROM Usuario u
           LEFT JOIN Sesion s ON u.id_usuario = s.id_usuario
           WHERE s.startTime IS NOT NULL
@@ -550,7 +550,7 @@ app.get("/dashboard", async (req, res) => {
       activeToday: `
           SELECT COUNT(*) AS total
           FROM Sesion
-          WHERE DATE(startTime) = DATE(CONVERT_TZ(NOW(), '+00:00', '-06:00'));
+          WHERE DATE(startTime) = DATE(CONVERT_TZ(NOW(), '+00:00', '-06:00'))
       `,
       thisWeek: `
           SELECT COUNT(*) AS total
@@ -579,7 +579,7 @@ app.get("/dashboard", async (req, res) => {
           LIMIT 1
       `,
       sessionsByDay: `
-          SELECT DATE(startTime) as day, COUNT(*) AS count
+          SELECT DATE(startTime) AS day, COUNT(*) AS count
           FROM Sesion
           WHERE startTime >= DATE_SUB(CURDATE(), INTERVAL 15 DAY)
           GROUP BY day
@@ -613,17 +613,16 @@ app.get("/dashboard", async (req, res) => {
           FROM IntentoNivel i
           JOIN Nivel n ON i.id_nivel = n.id_nivel
           GROUP BY n.nombre
-          ORDER BY n.id_nivel;
+          ORDER BY n.id_nivel
       `,
       logrosPorNivel: `
-          SELECT 
-              n.nombre AS nivel,
-              l.nombre AS logro,
-              ROUND(COUNT(*) * 100.0 / (
-                  SELECT COUNT(*) 
-                  FROM IntentoNivel i2 
-                  WHERE i2.id_nivel = i.id_nivel
-              ), 1) AS porcentaje
+          SELECT n.nombre AS nivel,
+                 l.nombre AS logro,
+                 ROUND(COUNT(*) * 100.0 / (
+                     SELECT COUNT(*)
+                     FROM IntentoNivel i2
+                     WHERE i2.id_nivel = i.id_nivel
+                 ), 1) AS porcentaje
           FROM LogroUsuario lu
           JOIN Logro l ON l.id_logro = lu.id_logro
           JOIN Usuario u ON u.id_usuario = lu.id_usuario
@@ -638,6 +637,22 @@ app.get("/dashboard", async (req, res) => {
           WHERE creationDate >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
           GROUP BY day
           ORDER BY day ASC
+      `,
+      ageGenderDistribution: `
+          SELECT CASE
+                     WHEN TIMESTAMPDIFF(YEAR, birthDate, CURDATE()) < 18 THEN '<18'
+                     WHEN TIMESTAMPDIFF(YEAR, birthDate, CURDATE()) BETWEEN 18 AND 24 THEN '18-24'
+                     WHEN TIMESTAMPDIFF(YEAR, birthDate, CURDATE()) BETWEEN 25 AND 34 THEN '25-34'
+                     WHEN TIMESTAMPDIFF(YEAR, birthDate, CURDATE()) BETWEEN 35 AND 44 THEN '35-44'
+                     WHEN TIMESTAMPDIFF(YEAR, birthDate, CURDATE()) BETWEEN 45 AND 54 THEN '45-54'
+                     ELSE '55+'
+                 END AS ageRange,
+                 gender,
+                 COUNT(*) AS total
+          FROM Usuario
+          WHERE birthDate IS NOT NULL AND gender IS NOT NULL
+          GROUP BY ageRange, gender
+          ORDER BY ageRange
       `
   };
 
@@ -668,7 +683,8 @@ app.get("/dashboard", async (req, res) => {
           genderCount: results.genderCount,
           accuracyPerLevel: results.accuracyPerLevel,
           logrosPorNivel: results.logrosPorNivel,
-          newUsersByDay: results.newUsersByDay
+          newUsersByDay: results.newUsersByDay,
+          ageGenderDistribution: results.ageGenderDistribution
       });
 
   } catch (err) {

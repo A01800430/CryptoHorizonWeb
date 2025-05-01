@@ -1,5 +1,14 @@
 <%- include('../partials/header') %>
 
+<!-- 
+  =================== DASHBOARD VIEW ===================
+  Esta vista muestra el panel principal con los siguientes módulos:
+  - KPIs generales (usuarios, sesiones, plataformas, etc.)
+  - Mapa interactivo de usuarios por país
+  - Gráficos de sesiones, género, edad, precisión, logros y nuevos usuarios
+  - Leaderboard y sesiones recientes
+-->
+
 <!-- Evita que la página se cargue desde el caché del navegador -->
 <script>
   window.onpageshow = function(event) {
@@ -11,176 +20,200 @@
 
 <body class="animate__animated animate__fadeIn">
 
-<!-- Navbar sticky y centrada -->
-<div class="menu-container">
-  <%- include('../partials/navbar') %>
-</div>
-
-<!-- Contenido principal -->
-<main class="py-4 px-3 px-sm-4 px-md-5 px-xl-5">
-
-  <!-- Encabezado del Dashboard -->
-  <div class="mb-4">
-    <h1 class="fw-bold text-primary">Dashboard Overview</h1>
-    <p class="text-muted">Welcome, <%= username %></p>
+  <!-- Navbar -->
+  <div class="menu-container">
+    <%- include('../partials/navbar') %>
   </div>
 
-  <!-- KPIs principales -->
-  <% const kpi = [
-    { icon: "🧍", title: "Total Users", val: totalUsers, color: "success" },
-    { icon: "⏱️", title: "Avg. Session", val: avgSession + ' min', color: "info" },
-    { icon: "🌎", title: "Countries", val: countries, color: "warning" },
-    { icon: "👩‍💻", title: "Active Today", val: activeToday, color: "secondary" },
-    { icon: "📅", title: "Sessions This Week", val: sessionsThisWeek, color: "primary" },
-    { icon: "📱", title: "Top Device", val: topDevice, color: "danger" },
-    { icon: "🌐", title: "Top Language", val: topLanguage, color: "success" },
-    { icon: "🖥️", title: "Top Platform", val: topPlatform, color: "primary" }
-  ] %>
+  <!-- Contenido principal -->
+  <main class="py-4 px-3 px-sm-4 px-md-5 px-xl-5">
 
-  <!-- Tarjetas de KPIs -->
-  <section class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 mb-5">
-    <% kpi.forEach((k, i) => { %>
-      <div class="col animate__animated animate__fadeInUp animate__delay-<%= Math.floor(i / 4) * 0.4 %>s">
-        <div class="card h-100 neumorphism">
-          <div class="card-body d-flex flex-column justify-content-center">
-            <h5 class="text-<%= k.color %> mb-2">
-              <span class="emoji" style="font-size:1.8rem;"><%= k.icon %></span> <%= k.title %>
-            </h5>
-            <p class="fs-4 fw-bold text-center m-0"><%= k.val %></p>
+    <!-- Encabezado -->
+    <div class="mb-4">
+      <h1 class="fw-bold text-primary">Dashboard Overview</h1>
+      <p class="text-muted">Welcome, <%= username %></p>
+    </div>
+
+    <!-- KPIs -->
+    <% const kpi = [
+      { icon: "🧍", title: "Total Users", val: totalUsers, color: "success" },
+      { icon: "⏱️", title: "Avg. Session", val: avgSession + ' min', color: "info" },
+      { icon: "🌎", title: "Countries", val: countries, color: "warning" },
+      { icon: "👩‍💻", title: "Active Today", val: activeToday, color: "secondary" },
+      { icon: "📅", title: "Sessions This Week", val: sessionsThisWeek, color: "primary" },
+      { icon: "📱", title: "Top Device", val: topDevice, color: "danger" },
+      { icon: "🌐", title: "Top Language", val: topLanguage, color: "success" },
+      { icon: "🖥️", title: "Top Platform", val: topPlatform, color: "primary" }
+    ] %>
+
+    <section class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 mb-5">
+      <% kpi.forEach((k, i) => { %>
+        <div class="col animate__animated animate__fadeInUp animate__delay-<%= Math.floor(i / 4) * 0.4 %>s">
+          <div class="card h-100 neumorphism">
+            <div class="card-body d-flex flex-column justify-content-center">
+              <h5 class="text-<%= k.color %> mb-2">
+                <span class="emoji" style="font-size:1.8rem;"><%= k.icon %></span> <%= k.title %>
+              </h5>
+              <p class="fs-4 fw-bold text-center m-0"><%= k.val %></p>
+            </div>
           </div>
         </div>
+      <% }) %>
+    </section>
+
+    <!-- 🌍 Users by Country -->
+    <section class="mb-5 animate__animated animate__fadeInUp animate__delay-1s">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="text-primary mb-0">Users by Country</h4>
+        <button id="toggleProjection" class="btn-dashboard btn-sm">Toggle Map / Globe</button>
       </div>
-    <% }) %>
-  </section>
+      <div class="chart-container neumorphism">
+        <div id="globeChart" style="width: 100%; height: 100%;"></div>
+      </div>
+    </section>
 
-  <!-- Gráfico: Usuarios por país -->
-  <section class="mb-5 animate__animated animate__fadeInUp animate__delay-1s">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h4 class="text-primary mb-0">Users by Country</h4>
-      <button id="toggleProjection" class="btn-dashboard btn-sm">Toggle Map / Globe</button>
+    <!-- 📈 Sessions by Day -->
+    <section class="mb-5 animate__animated animate__fadeInUp animate__delay-1-2s">
+      <h4 class="text-primary mb-3">Sessions by Day</h4>
+      <div class="chart-container neumorphism">
+        <div id="sessionsChart" style="width: 100%; height: 100%;"></div>
+      </div>
+    </section>
+
+    <!-- 🚻 Gender & Age Distribution -->
+    <div class="row mb-5 animate__animated animate__fadeInUp animate__delay-1-4s">
+      <div class="col-md-6 mb-4 mb-md-0">
+        <h4 class="text-primary mb-3 text-center">🚻 Users by Gender</h4>
+        <div class="chart-container neumorphism" style="height: 400px;">
+          <div id="genderChartCanvas" style="width: 100%; height: 100%;"></div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <h4 class="text-primary mb-3 text-center">👥 Age Distribution by Gender</h4>
+        <div class="chart-container neumorphism" style="height: 400px;">
+          <div id="ageGenderChart" style="width: 100%; height: 100%;"></div>
+        </div>
+      </div>
     </div>
-    <div class="chart-container neumorphism">
-      <div id="globeChart" style="width: 100%; height: 100%;"></div>
-    </div>
-  </section>
 
-  <!-- Gráfico: Sesiones por día -->
-  <section class="mb-5 animate__animated animate__fadeInUp animate__delay-1-2s">
-    <h4 class="text-primary mb-3">Sessions by Day</h4>
-    <div class="chart-container neumorphism">
-      <div id="sessionsChart" style="width: 100%; height: 100%;"></div>
-    </div>
-  </section>
-
-  <!-- Gráfico: Usuarios por género -->
-  <section class="mb-5 animate__animated animate__fadeInUp animate__delay-1-3s">
-    <h4 class="text-primary mb-3 text-center">Users by Gender</h4>
-    <div class="chart-container neumorphism d-flex justify-content-center align-items-center" style="max-width: 700px; margin: auto; padding: 20px;">
-      <div id="genderChartCanvas" style="width: 100%; height: 400px;"></div>
-    </div>
-  </section>
-  
-  
-    
-    <!-- Gráfico: Precisión promedio por nivel -->
-  <section class="mb-5 animate__animated animate__fadeInUp animate__delay-1-4s">
-    <h4 class="text-primary mb-3 text-center">📊 Average Accuracy per Level</h4>
-    <div class="chart-container neumorphism d-flex justify-content-center align-items-center" style="max-width: 800px; margin: auto; padding: 20px;">
-      <div id="accuracyChart" style="width: 100%; height: 400px;"></div>
-    </div>
-  </section>
-  
-  <section class="mb-5 animate__animated animate__fadeInUp animate__delay-1-5s">
-  <h4 class="text-primary mb-3 text-center">🏆 Achievement Distribution by Level</h4>
-  <div class="chart-container neumorphism d-flex justify-content-center align-items-center" style="max-width: 800px; margin: auto; padding: 20px;">
-    <div id="achievementsChart" style="width: 100%; height: 500px;"></div>
-  </div>
-</section>
-
-<!-- Gráfico: Nuevos usuarios por día -->
-<section class="mb-5 animate__animated animate__fadeInUp animate__delay-1-5s">
-  <h4 class="text-primary mb-3 text-center">📈 New Users Over Time</h4>
-  <div class="chart-container neumorphism" style="height: 500px;">
-    <div id="newUsersChart" style="width: 100%; height: 100%;"></div>
-  </div>
-</section>
-
-
-  <!-- Tabla: Sesiones recientes -->
-  <section class="mt-5 animate__animated animate__fadeInUp animate__delay-1-4s">
-    <h4 class="text-primary mb-3">Recent Sessions</h4>
-    <div class="table-responsive neumorphism px-3 py-2">
-      <table class="table table-hover align-middle text-center">
-        <thead class="table-dark text-uppercase small">
-          <tr>
-            <th scope="col">Username</th>
-            <th scope="col">Country</th>
-            <th scope="col">Device</th>
-            <th scope="col">Platform</th>
-            <th scope="col">Start</th>
-            <th scope="col">End</th>
-            <th scope="col">Duration</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% users.forEach(u => { %>
+    <!-- 🏅 Leaderboard -->
+    <section class="mb-5 animate__animated animate__fadeInUp animate__delay-1-5s">
+      <h4 class="text-primary mb-3 text-center">🏅 Leaderboard</h4>
+      <div class="table-responsive neumorphism px-3 py-2">
+        <table class="table table-hover align-middle text-center leaderboard-table">
+          <thead class="table-dark text-uppercase small">
             <tr>
-              <td><strong><%= u.userName %></strong></td>
-              <td><%= u.country %></td>
-              <td><%= u.deviceModel %></td>
-              <td><%= u.platform %></td>
-              <td><%= u.startTime %></td>
-              <td><%= u.endTime %></td>
-              <td><span class="badge bg-secondary"><%= u.duration_min %> min</span></td>
+              <th>#</th>
+              <th>Username</th>
+              <th>Total Score</th>
+              <th>Total Time (s)</th>
             </tr>
-          <% }) %>
-        </tbody>
-      </table>
+          </thead>
+          <tbody id="leaderboardBody">
+            <!-- JS populates this -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 📊 Accuracy & 🏆 Achievements -->
+    <div class="row mb-5 animate__animated animate__fadeInUp animate__delay-1-6s">
+      <div class="col-md-6 mb-4 mb-md-0">
+        <h4 class="text-primary mb-3 text-center">📊 Average Accuracy per Level</h4>
+        <div class="chart-container neumorphism" style="height: 400px;">
+          <div id="accuracyChart" style="width: 100%; height: 100%;"></div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <h4 class="text-primary mb-3 text-center">🏆 Achievement Distribution by Level</h4>
+        <div class="chart-container neumorphism" style="height: 400px;">
+          <div id="achievementsChart" style="width: 100%; height: 100%;"></div>
+        </div>
+      </div>
     </div>
-  </section>
-  
-</main>
 
-<!-- Variables globales para los gráficos -->
-<script>
-  window.countriesData = <%- JSON.stringify(countriesPie) %>;
-  window.sessionsByDay = <%- JSON.stringify(sessionsByDay) %>;
-  window.genderCountData = <%- JSON.stringify(genderCount) %>;
-  window.accuracyPerLevel = <%- JSON.stringify(accuracyPerLevel) %>; 
-  window.logrosPorNivel = <%- JSON.stringify(logrosPorNivel) %>;
-  window.newUsersByDay = <%- JSON.stringify(newUsersByDay) %>;
-</script>
+    <!-- 📈 New Users Over Time -->
+    <section class="mb-5 animate__animated animate__fadeInUp animate__delay-1-7s">
+      <h4 class="text-primary mb-3 text-center">📈 New Users Over Time</h4>
+      <div class="chart-container neumorphism" style="height: 500px;">
+        <div id="newUsersChart" style="width: 100%; height: 100%;"></div>
+      </div>
+    </section>
 
+    <!-- 🕒 Recent Sessions -->
+    <section class="mt-5 animate__animated animate__fadeInUp animate__delay-1-8s">
+      <h4 class="text-primary mb-3">Recent Sessions</h4>
+      <div class="table-responsive neumorphism px-3 py-2">
+        <table class="table table-hover align-middle text-center">
+          <thead class="table-dark text-uppercase small">
+            <tr>
+              <th>Username</th>
+              <th>Country</th>
+              <th>Device</th>
+              <th>Platform</th>
+              <th>Start</th>
+              <th>End</th>
+              <th>Duration</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% users.forEach(u => { %>
+              <tr>
+                <td><strong><%= u.userName %></strong></td>
+                <td><%= u.country %></td>
+                <td><%= u.deviceModel %></td>
+                <td><%= u.platform %></td>
+                <td><%= u.startTime %></td>
+                <td><%= u.endTime %></td>
+                <td><span class="badge bg-secondary"><%= u.duration_min %> min</span></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </section>
 
+  </main>
 
+  <!-- Datos para JS -->
+  <script>
+    window.countriesData = <%- JSON.stringify(countriesPie) %>;
+    window.sessionsByDay = <%- JSON.stringify(sessionsByDay) %>;
+    window.genderCountData = <%- JSON.stringify(genderCount) %>;
+    window.accuracyPerLevel = <%- JSON.stringify(accuracyPerLevel) %>;
+    window.logrosPorNivel = <%- JSON.stringify(logrosPorNivel) %>;
+    window.newUsersByDay = <%- JSON.stringify(newUsersByDay) %>;
+    window.ageGenderDistribution = <%- JSON.stringify(ageGenderDistribution) %>;
+  </script>
 
-<!-- Librerías amCharts -->
-<script src="https://cdn.amcharts.com/lib/5/index.js"></script>
-<script src="https://cdn.amcharts.com/lib/5/xy.js"></script>
-<script src="https://cdn.amcharts.com/lib/5/percent.js"></script> 
-<script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
+  <!-- amCharts -->
+  <script src="https://cdn.amcharts.com/lib/5/index.js"></script>
+  <script src="https://cdn.amcharts.com/lib/5/xy.js"></script>
+  <script src="https://cdn.amcharts.com/lib/5/percent.js"></script>
+  <script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
 
-<!-- Librería ECharts -->
-<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+  <!-- ECharts -->
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
 
-<!-- Scripts de los gráficos personalizados -->
-<script src="/js/charts/genderChart.js"></script>
-<script src="/js/utils/countryCodes.js"></script>
-<script src="/js/charts/mapChart.js"></script>
-<script src="/js/charts/sessionsChart.js"></script>
-<script src="/js/charts/accuracyChart.js"></script>
-<script src="/js/charts/achievementsPerLevel.js"></script>
-<script src="/js/charts/newUsersChart.js"></script>
+  <!-- Gráficos personalizados -->
+  <script src="/js/charts/genderChart.js"></script>
+  <script src="/js/utils/countryCodes.js"></script>
+  <script src="/js/charts/mapChart.js"></script>
+  <script src="/js/charts/sessionsChart.js"></script>
+  <script src="/js/charts/accuracyChart.js"></script>
+  <script src="/js/charts/achievementsPerLevel.js"></script>
+  <script src="/js/charts/newUsersChart.js"></script>
+  <script src="/js/charts/leaderboardTable.js"></script>
+  <script src="/js/charts/ageGenderChart.js"></script>
 
+  <!-- Botón Scroll Up -->
+  <button id="scrollUpBtn" title="Back to top">
+    <ion-icon name="arrow-up-outline"></ion-icon>
+  </button>
+  <script src="/js/utils/scrollNav.js"></script>
 
-<!-- Botón de scroll hacia arriba -->
-<button id="scrollUpBtn" title="Back to top">
-  <ion-icon name="arrow-up-outline"></ion-icon>
-</button>
-
-<!-- Script para activar el scrollUpBtn -->
-<script src="/js/utils/scrollNav.js"></script>
-
-<%- include('../partials/footer') %>
+  <%- include('../partials/footer') %>
 </body>
 </html>
