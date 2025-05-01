@@ -1,14 +1,23 @@
 <%- include('../partials/header') %>
 
+<!-- Asegúrate de que Font Awesome esté en tu header si usas íconos -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
 <div class="menu-container">
   <%- include('../partials/navbar_public') %>
 </div>
 
 <div class="container text-center mt-5">
-  <h1>🏠 Welcome</h1>
-  <p>Explore and access the game without needing to log in.</p>
-  <a href="/login" class="btn btn-primary mt-3">Log In</a>
+  <!-- Reemplazamos el h1 por la imagen -->
+  <img src="/img/Title.png" alt="CryptoHorizon Title" class="img-fluid" style="max-width: 100%; height: auto;">
+  
+  <p>Are you ready to learn Crypto while having fun?</p>
+
+  <a href="/game" class="btn btn-danger mt-3">
+    <i class="fas fa-play"></i> PLAY
+  </a>
 </div>
 
 <%- include('../partials/footer') %>
 </body>
+

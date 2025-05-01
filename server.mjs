@@ -369,8 +369,12 @@ app.get("/forgot", (req, res) => {
 
 app.post("/forgot", async (req, res) => {
   const { email } = req.body;
+
   if (!email) {
-    return res.json({ done: false, message: "Email required" });
+    return res.render("forgot", {
+      success: null,
+      error: "📭 Email is required",
+    });
   }
 
   let connection;
@@ -383,12 +387,15 @@ app.post("/forgot", async (req, res) => {
     );
 
     if (result.length === 0) {
-      return res.json({ done: false, message: "Email not registered" });
+      return res.render("forgot", {
+        success: null,
+        error: "❌ This email is not registered.",
+      });
     }
 
     const tokenData = {
       email,
-      exp: Date.now() + 15 * 60 * 1000 // 15 min
+      exp: Date.now() + 15 * 60 * 1000, // 15 minutes
     };
 
     const token = Buffer.from(JSON.stringify(tokenData)).toString("base64url");
@@ -402,21 +409,29 @@ app.post("/forgot", async (req, res) => {
         <p>Click the link to reset your password</p>
         <p><a href="${resetLink}">${resetLink}</a></p>
         <p>This link will expire in 15 minutes.</p>
-      `
+      `,
     });
 
     console.log("📬 Respuesta de Resend:", response);
 
-    // Si la API respondió con error:
     if (response.error) {
-      return res.json({ done: false, message: "Error sending email", detail: response.error });
+      return res.render("forgot", {
+        success: null,
+        error: "❌ Failed to send email. Please try again later.",
+      });
     }
 
-    return res.json({ done: true, message: "Email sent successfully" });
+    return res.render("forgot", {
+      success: "📧 Email sent! Check your inbox to reset your password.",
+      error: null,
+    });
 
   } catch (err) {
     console.error("❌ Error general en /forgot:", err);
-    return res.json({ done: false, message: "Error sending email" });
+    return res.render("forgot", {
+      success: null,
+      error: "❌ Something went wrong. Please try again later.",
+    });
   } finally {
     if (connection) await connection.end();
   }
