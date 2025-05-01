@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="TemplateData/style.css">
 
 <!-- Contenedor principal del juego Unity -->
-<div id="unity-container" class="unity-desktop container mb-5" style="margin-top: 30px;">
+<div id="unity-container" class="unity-desktop" style="margin-top: 30px;">
   <canvas id="unity-canvas" width=854 height=480 tabindex="-1"></canvas> 
 
   <div id="unity-loading-bar">
@@ -118,9 +118,9 @@
   document.body.appendChild(script);
 </script>
 
-<div class="container text-center my-5">
-  <p class="fw-semibold">Are you an admin?</p>
-  <a href="/login" class="btn btn-outline-dark mt-2 px-4 py-2">Login</a>
+<div class="container text-center my-5" style="margin-top: 80px;">
+  <p class="fw-semibold">Are you an admin? <a href="/login">Login</a></p>
 </div>
+
 
 <%- include('../partials/footer') %>
