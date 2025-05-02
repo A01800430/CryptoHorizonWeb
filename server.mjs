@@ -1225,13 +1225,13 @@ app.post("/logout", (req, res) => {
   });
 });
 
+// ==================== Recargar página de juego ====================
+app.get('/recargarPagina', (req, res) => {
+  res.redirect('/game');
+});
+
 // Página de recurso no encontrado (estatus 404)
 app.use((req, res) => {
   const url = req.originalUrl;
   res.status(404).render('partials/not_found', { url });
-});
-
-// ==================== Recargar página de juego ====================
-app.get('/recargarPagina', (req, res) => {
-  res.redirect('/game');
 });
