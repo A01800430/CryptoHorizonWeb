@@ -1,22 +1,12 @@
-/**
- * Script para generar un gráfico de barras horizontales con ECharts.
- * - Muestra la precisión promedio por nivel.
- * - Se usan colores personalizados por barra.
- * - Datos obtenidos desde window.accuracyPerLevel.
- */
+// public/js/charts/accuracyChart.js
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Verifica que el contenedor y los datos estén disponibles
   const chartDom = document.getElementById('accuracyChart');
   if (!chartDom || !window.accuracyPerLevel) return;
 
-  // Inicializa la instancia de ECharts en el contenedor
   const myChart = echarts.init(chartDom);
 
-  // Extrae los nombres de los niveles desde los datos
   const levelNames = window.accuracyPerLevel.map(item => item.levelName);
-
-  // Genera los datos para la serie con colores por barra
   const seriesData = window.accuracyPerLevel.map((item, index) => ({
     value: item.avgAccuracy,
     itemStyle: {
@@ -24,7 +14,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }));
 
-  // Configuración del gráfico
   const option = {
     tooltip: {
       trigger: 'axis',
@@ -36,13 +25,13 @@ document.addEventListener("DOMContentLoaded", () => {
     grid: {
       left: '10%',
       right: '5%',
-      bottom: '5%',
+      bottom: '15%',
       top: '5%',
       containLabel: true
     },
     xAxis: {
       type: 'value',
-      name: '% Accuracy',
+      name: '%',
       min: 0,
       max: 100
     },
@@ -62,6 +51,5 @@ document.addEventListener("DOMContentLoaded", () => {
     }]
   };
 
-  // Aplica la configuración al gráfico
   myChart.setOption(option);
 });

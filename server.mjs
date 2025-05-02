@@ -704,224 +704,262 @@ ORDER BY ageRange;
 
 // ======================= 📈 Rutas de visualización (patterns) =======================
 app.get("/sessions/patterns/data", async (req, res) => {
-if (!req.session.authenticated) return res.status(401).json({ error: "No autorizado" });
+  if (!req.session.authenticated) return res.status(401).json({ error: "No autorizado" });
 
-let connection;
-try {
-  connection = await getDBConnection();
+  let connection;
+  try {
+    connection = await getDBConnection();
 
-  // 🌡️ Heatmap día-hora
-  const [heatmapRows] = await connection.execute(`
-    SELECT
-      DATE_FORMAT(CONVERT_TZ(startTime, '+00:00', '-06:00'), '%W') AS weekday,
-      DATE_FORMAT(CONVERT_TZ(startTime, '+00:00', '-06:00'), '%l%p') AS hour,
-      COUNT(*) AS value
-    FROM Sesion
-    GROUP BY weekday, hour
-  `);
+    // 🌡️ Heatmap día-hora
+    const [heatmapRows] = await connection.execute(`
+      SELECT
+        DATE_FORMAT(CONVERT_TZ(startTime, '+00:00', '-06:00'), '%W') AS weekday,
+        DATE_FORMAT(CONVERT_TZ(startTime, '+00:00', '-06:00'), '%l%p') AS hour,
+        COUNT(*) AS value
+      FROM Sesion
+      GROUP BY weekday, hour
+    `);
 
-  // 📶 Línea de sesiones por semana
-  const [sessionsByWeek] = await connection.execute(`
-    SELECT 
-      DATE_FORMAT(startTime, '%Y-%u') AS week, 
-      COUNT(*) AS value 
-    FROM Sesion 
-    GROUP BY week 
-    ORDER BY week ASC
-  `);
+    // 📶 Línea de sesiones por semana
+    const [sessionsByWeek] = await connection.execute(`
+      SELECT 
+        DATE_FORMAT(startTime, '%Y-%u') AS week, 
+        COUNT(*) AS value 
+      FROM Sesion 
+      GROUP BY week 
+      ORDER BY week ASC
+    `);
 
+  
+    // Orden esperado por el frontend
+    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const hours = [
+      "12AM", "1AM", "2AM", "3AM", "4AM", "5AM",
+      "6AM", "7AM", "8AM", "9AM", "10AM", "11AM",
+      "12PM", "1PM", "2PM", "3PM", "4PM", "5PM",
+      "6PM", "7PM", "8PM", "9PM", "10PM", "11PM"
+    ];
 
-  // Orden esperado por el frontend
-  const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-  const hours = [
-    "12AM", "1AM", "2AM", "3AM", "4AM", "5AM",
-    "6AM", "7AM", "8AM", "9AM", "10AM", "11AM",
-    "12PM", "1PM", "2PM", "3PM", "4PM", "5PM",
-    "6PM", "7PM", "8PM", "9PM", "10PM", "11PM"
-  ];
+    const transformedHeatmap = heatmapRows.map(row => [
+      hours.indexOf(row.hour),
+      days.indexOf(row.weekday),
+      row.value
+    ]);
 
-  const transformedHeatmap = heatmapRows.map(row => [
-    hours.indexOf(row.hour),
-    days.indexOf(row.weekday),
-    row.value
-  ]);
+    res.json({
+      hours,
+      days,
+      data: transformedHeatmap,
+      sessionsByWeek,
+    });
 
-  res.json({
-    hours,
-    days,
-    data: transformedHeatmap,
-    sessionsByWeek,
-  });
-
-} catch (err) {
-  console.error("❌ Error en /sessions/patterns/data:", err);
-  res.status(500).json({ error: "Error al obtener datos" });
-} finally {
-  if (connection) await connection.end();
-}
+  } catch (err) {
+    console.error("❌ Error en /sessions/patterns/data:", err);
+    res.status(500).json({ error: "Error al obtener datos" });
+  } finally {
+    if (connection) await connection.end();
+  }
 });
 
 app.get("/sessions/patterns", async (req, res) => {
-if (!req.session.authenticated) return res.redirect("/login");
+  if (!req.session.authenticated) return res.redirect("/login");
 
-res.setHeader("Cache-Control", "no-store");
-res.setHeader("Pragma", "no-cache");
-res.setHeader("Expires", "0");
+  res.setHeader("Cache-Control", "no-store");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
 
-res.render("sessions/patterns", {
-  username: req.session.username
-});
+  res.render("sessions/patterns", {
+    username: req.session.username
+  });
 });
 
 app.get("/sessions/gantt/data", async (req, res) => {
-if (!req.session.authenticated) return res.status(401).json({ error: "No autorizado" });
+  if (!req.session.authenticated) return res.status(401).json({ error: "No autorizado" });
 
-let connection;
-try {
-  connection = await getDBConnection();
+  let connection;
+  try {
+    connection = await getDBConnection();
 
-  const [rows] = await connection.execute(`
-    SELECT
-      u.userName AS category,
-      DATE_FORMAT(CONVERT_TZ(s.startTime, '+00:00', '-06:00'), '%Y-%m-%d %H:%i') AS fromDate,
-      DATE_FORMAT(CONVERT_TZ(s.endTime, '+00:00', '-06:00'), '%Y-%m-%d %H:%i') AS toDate
-    FROM Sesion s
-    JOIN Usuario u ON u.id_usuario = s.id_usuario
-    WHERE s.startTime IS NOT NULL AND s.endTime IS NOT NULL
-    ORDER BY s.startTime DESC
-    LIMIT 50
-  `);
+    const [rows] = await connection.execute(`
+      SELECT
+        u.userName AS category,
+        DATE_FORMAT(CONVERT_TZ(s.startTime, '+00:00', '-06:00'), '%Y-%m-%d %H:%i') AS fromDate,
+        DATE_FORMAT(CONVERT_TZ(s.endTime, '+00:00', '-06:00'), '%Y-%m-%d %H:%i') AS toDate
+      FROM Sesion s
+      JOIN Usuario u ON u.id_usuario = s.id_usuario
+      WHERE s.startTime IS NOT NULL AND s.endTime IS NOT NULL
+      ORDER BY s.startTime DESC
+      LIMIT 50
+    `);
 
-  res.json(rows);
-} catch (err) {
-  console.error("❌ Error al obtener sesiones para Gantt:", err);
-  res.status(500).json({ error: "Error al obtener sesiones" });
-} finally {
-  if (connection) await connection.end();
-}
+    res.json(rows);
+  } catch (err) {
+    console.error("❌ Error al obtener sesiones para Gantt:", err);
+    res.status(500).json({ error: "Error al obtener sesiones" });
+  } finally {
+    if (connection) await connection.end();
+  }
 });
 
 
 // ======================= 🛠️ Para custom dashboard =======================
 app.get("/sessions/custom", async (req, res) => {
-if (!req.session.authenticated) return res.redirect("/login");
-
-res.setHeader('Cache-Control', 'no-store');
-res.setHeader('Pragma', 'no-cache');
-res.setHeader('Expires', '0');
-
-const sql = {
-sessionsByDay: `
-  SELECT DATE(startTime) as day, COUNT(*) AS count
-  FROM Sesion
-  WHERE startTime >= DATE_SUB(CURDATE(), INTERVAL 15 DAY)
-  GROUP BY day
-  ORDER BY day ASC
-`,
-countriesPie: `
-  SELECT country, COUNT(*) AS total
-  FROM Usuario
-  GROUP BY country
-  ORDER BY total DESC
-  LIMIT 10
-`,
-durationHistogram: `
-  SELECT FLOOR(duration_seconds / 60) AS duration_min, COUNT(*) AS count
-  FROM Sesion
-  GROUP BY duration_min
-  ORDER BY duration_min
-`,
-genderPlatform: `
-  SELECT gender, platform, COUNT(*) AS total
-  FROM Usuario
-  GROUP BY gender, platform
-`,
-achievementsByType: `
-  SELECT l.nombre AS type, COUNT(*) AS total
-  FROM LogroUsuario lu
-  JOIN Logro l ON lu.id_logro = l.id_logro
-  GROUP BY l.nombre
-  ORDER BY total DESC
-`,
-osDevices: `
-  SELECT operatingSystem AS \`os\`, COUNT(*) AS total
-  FROM Usuario
-  GROUP BY operatingSystem
-`,
-hardestLevels: `
-  SELECT n.nombre AS level, ROUND(AVG(i.porcentaje_aciertos), 1) AS accuracy
-  FROM IntentoNivel i
-  JOIN Nivel n ON i.id_nivel = n.id_nivel
-  GROUP BY n.nombre
-  ORDER BY accuracy ASC
-  LIMIT 5
-`
-};
-
-
-let connection;
-try {
-  connection = await getDBConnection();
-  const results = {};
-
-  for (const [key, query] of Object.entries(sql)) {
-    const [rows] = await connection.execute(query);
-    results[key] = rows;
-  }
-
-  res.render("sessions/custom", {
-    username: req.session.username,
-    sessionsByDay: results.sessionsByDay,
-    countriesPie: results.countriesPie,
-    durationHistogram: results.durationHistogram,
-    genderPlatform: results.genderPlatform,
-    achievementsByType: results.achievementsByType,
-    osDevicesData: results.osDevices,
-    hardestLevels: results.hardestLevels
-  });
-
-} catch (err) {
-  console.error("❌ Error en /sessions/custom:", err);
-  res.status(500).send("Error al cargar el dashboard personalizado");
-} finally {
-  if (connection) await connection.end();
-}
-});
-
-// ======================= 👤👤 Usuarios  =======================
-
-app.get("/dashboard/users", async (req, res) => {
   if (!req.session.authenticated) return res.redirect("/login");
 
   res.setHeader('Cache-Control', 'no-store');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
 
+  const sql = {
+  sessionsByDay: `
+    SELECT DATE(startTime) as day, COUNT(*) AS count
+    FROM Sesion
+    WHERE startTime >= DATE_SUB(CURDATE(), INTERVAL 15 DAY)
+    GROUP BY day
+    ORDER BY day ASC
+  `,
+  countriesPie: `
+    SELECT country, COUNT(*) AS total
+    FROM Usuario
+    GROUP BY country
+    ORDER BY total DESC
+    LIMIT 10
+  `,
+  durationHistogram: `
+    SELECT FLOOR(duration_seconds / 60) AS duration_min, COUNT(*) AS count
+    FROM Sesion
+    GROUP BY duration_min
+    ORDER BY duration_min
+  `,
+  genderPlatform: `
+    SELECT gender, platform, COUNT(*) AS total
+    FROM Usuario
+    GROUP BY gender, platform
+  `,
+  achievementsByType: `
+    SELECT l.nombre AS type, COUNT(*) AS total
+    FROM LogroUsuario lu
+    JOIN Logro l ON lu.id_logro = l.id_logro
+    GROUP BY l.nombre
+    ORDER BY total DESC
+  `,
+  osDevices: `
+    SELECT operatingSystem AS \`os\`, COUNT(*) AS total
+    FROM Usuario
+    GROUP BY operatingSystem
+  `,
+  hardestLevels: `
+    SELECT n.nombre AS level, ROUND(AVG(i.porcentaje_aciertos), 1) AS accuracy
+    FROM IntentoNivel i
+    JOIN Nivel n ON i.id_nivel = n.id_nivel
+    GROUP BY n.nombre
+    ORDER BY accuracy ASC
+    LIMIT 5
+  `
+};
+
 
   let connection;
-   try {
-      connection = await getDBConnection();
-      const [users] = await connection.execute(`
-        SELECT id_usuario, userName, email, country, deviceModel, systemLanguage
-        FROM Usuario
-        ORDER BY userName ASC
-      `);
+  try {
+    connection = await getDBConnection();
+    const results = {};
 
+    for (const [key, query] of Object.entries(sql)) {
+      const [rows] = await connection.execute(query);
+      results[key] = rows;
+    }
 
-      res.render("users/users", {
-          username: req.session.username,
-          users
-      });
+    res.render("sessions/custom", {
+      username: req.session.username,
+      sessionsByDay: results.sessionsByDay,
+      countriesPie: results.countriesPie,
+      durationHistogram: results.durationHistogram,
+      genderPlatform: results.genderPlatform,
+      achievementsByType: results.achievementsByType,
+      osDevicesData: results.osDevices,
+      hardestLevels: results.hardestLevels
+    });
 
   } catch (err) {
-      console.error("❌ Error al cargar usuarios:", err);
-      res.status(500).send("Error al obtener usuarios");
+    console.error("❌ Error en /sessions/custom:", err);
+    res.status(500).send("Error al cargar el dashboard personalizado");
   } finally {
-      if (connection) await connection.end();
+    if (connection) await connection.end();
   }
 });
 
-// ==================== 👤 Usuario individual ====================
+// ======================= 👤👤 Usuarios =======================
+app.get("/dashboard/users", async (req, res) => {
+  if (!req.session.authenticated) return res.redirect("/login");
+
+  const { country, gender, device } = req.query;
+
+  try {
+    const connection = await getDBConnection();
+
+    // 🧮 KPIs
+    const [[{ totalUsers }]] = await connection.execute(`
+      SELECT COUNT(*) AS totalUsers FROM Usuario
+    `);
+
+    const [[{ newUsers }]] = await connection.execute(`
+      SELECT COUNT(*) AS newUsers FROM Usuario
+      WHERE MONTH(creationDate) = MONTH(CURDATE()) AND YEAR(creationDate) = YEAR(CURDATE())
+    `);
+
+    const [[{ activeUsers }]] = await connection.execute(`
+      SELECT COUNT(DISTINCT id_usuario) AS activeUsers FROM Sesion
+      WHERE MONTH(startTime) = MONTH(CURDATE()) AND YEAR(startTime) = YEAR(CURDATE())
+    `);
+
+    // 🧩 Filtros dinámicos
+    const [countries] = await connection.execute(`
+      SELECT DISTINCT country FROM Usuario WHERE country IS NOT NULL ORDER BY country
+    `);
+
+    const [genders] = await connection.execute(`
+      SELECT DISTINCT gender FROM Usuario WHERE gender IS NOT NULL ORDER BY gender
+    `);
+
+    const [devices] = await connection.execute(`
+      SELECT DISTINCT deviceModel FROM Usuario WHERE deviceModel IS NOT NULL ORDER BY deviceModel
+    `);
+
+    // 📋 Consulta de usuarios con filtros aplicados
+    const [users] = await connection.execute(`
+      SELECT id_usuario, userName, email, country, gender, deviceModel, systemLanguage
+      FROM Usuario
+      WHERE (? IS NULL OR country = ?)
+        AND (? IS NULL OR gender = ?)
+        AND (? IS NULL OR deviceModel = ?)
+      ORDER BY userName
+    `, [
+      country || null, country || null,
+      gender || null, gender || null,
+      device || null, device || null
+    ]);
+
+    res.render("users/users", {
+      username: req.session.username,
+      users,
+      totalUsers,
+      newUsers,
+      activeUsers,
+      country,
+      gender,
+      device,
+      countries,
+      genders,
+      devices // ✅ Este era el que faltaba
+    });
+
+  } catch (err) {
+    console.error("❌ Error al cargar usuarios:", err);
+    res.status(500).send("Error al obtener usuarios");
+  }
+});
+
+// ==================== 👤 Perfil de Usuario Individual ====================
 app.get("/users/users/:id", async (req, res) => {
   if (!req.session.authenticated) return res.redirect("/login");
 
@@ -935,27 +973,87 @@ app.get("/users/users/:id", async (req, res) => {
   try {
     connection = await getDBConnection();
 
+    // ✅ Datos básicos del usuario
     const [[user]] = await connection.execute(
       `SELECT * FROM Usuario WHERE id_usuario = ?`,
       [userId]
     );
+    if (!user) return res.status(404).send("Usuario no encontrado");
 
-    const [sessions] = await connection.execute(
-      `SELECT * FROM Sesion WHERE id_usuario = ? ORDER BY startTime DESC`,
+    // ✅ Logros obtenidos
+    const [logrosData] = await connection.execute(
+      `SELECT l.id_logro, l.nombre, l.descripcion,
+              CASE WHEN lu.id_logro IS NOT NULL THEN 1 ELSE 0 END AS obtenido
+       FROM Logro l
+       LEFT JOIN LogroUsuario lu
+         ON l.id_logro = lu.id_logro AND lu.id_usuario = ?
+       ORDER BY l.id_logro`,
       [userId]
     );
 
-    if (!user) return res.status(404).send("User not found");
+    // ✅ Leaderboard
+    const [leaderboard] = await connection.execute(`CALL GenerarLeaderboard(1)`);
+    const leaderboardData = leaderboard[0] || [];
+    const userLeaderboard = leaderboardData.find(u => u.id_usuario === parseInt(userId)) || null;
+    const position = userLeaderboard ? leaderboardData.findIndex(u => u.id_usuario === parseInt(userId)) + 1 : null;
 
+    // ✅ Precisión por nivel (para gráfica)
+    const [accuracyPerLevel] = await connection.execute(
+      `SELECT n.nombre AS levelName, i.porcentaje_aciertos
+       FROM IntentoNivel i
+       JOIN Nivel n ON i.id_nivel = n.id_nivel
+       WHERE i.id_usuario = ?
+       ORDER BY n.id_nivel`,
+      [userId]
+    );
+
+    // ✅ Desempeño por nivel (para tabla y puntaje)
+    const [performanceTable] = await connection.execute(
+      `SELECT n.nombre AS nivel, i.puntaje, i.porcentaje_aciertos, i.tiempo_finalizacion
+       FROM IntentoNivel i
+       JOIN Nivel n ON i.id_nivel = n.id_nivel
+       WHERE i.id_usuario = ?
+       ORDER BY n.id_nivel`,
+      [userId]
+    );
+
+    // ✅ Sesiones recientes
+    const [sessions] = await connection.execute(
+      `SELECT id_sesion, startTime, endTime, duration_seconds
+       FROM Sesion
+       WHERE id_usuario = ? AND startTime IS NOT NULL AND endTime IS NOT NULL
+       ORDER BY startTime DESC
+       LIMIT 20`,
+      [userId]
+    );
+
+    // ✅ Actividad semanal (agrupada por día)
+    const [sessionsPerDay] = await connection.execute(
+      `SELECT DATE(CONVERT_TZ(startTime, '+00:00', '-06:00')) AS date, COUNT(*) AS total
+       FROM Sesion
+       WHERE id_usuario = ?
+       GROUP BY DATE(CONVERT_TZ(startTime, '+00:00', '-06:00'))
+       ORDER BY date ASC`,
+      [userId]
+    );
+
+    // 🚀 Renderizar
     res.render("users/details", {
       username: req.session.username,
       user,
-      sessions
+      logrosData,
+      leaderboard: leaderboardData,
+      userLeaderboard,
+      position,
+      accuracyPerLevel,
+      performanceTable,
+      sessions,
+      sessionsPerDay
     });
 
   } catch (err) {
-    console.error("❌ Error loading profile", err);
-    res.status(500).send("Error loading profile");
+    console.error("❌ Error al cargar perfil:", err);
+    res.status(500).send("Error al cargar usuario");
   } finally {
     if (connection) await connection.end();
   }

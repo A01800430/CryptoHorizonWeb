@@ -1,19 +1,16 @@
 <%- include('../partials/header') %>
 
 <body>
-  <!-- Navbar superior -->
   <div class="menu-container">
     <%- include('../partials/navbar') %>
   </div>
 
-  <!-- Contenido principal del perfil de usuario -->
   <main class="container mt-5">
-    <!-- Encabezado del perfil con nombre de usuario -->
-    <h2 class="text-primary mb-3">User Profile: <%= user.userName %></h2>
+    <h2 class="text-primary mb-4">User Profile: <%= user.userName %></h2>
 
-    <!-- Tarjeta con la información básica del usuario -->
+    <!-- Datos básicos -->
     <div class="card p-4 mb-4">
-      <h5 class="mb-2">Información básica</h5>
+      <h5 class="mb-2">Basic Information</h5>
       <p><strong>Email:</strong> <%= user.email %></p>
       <p><strong>Country:</strong> <%= user.country %></p>
       <p><strong>Gender:</strong> <%= user.gender || "N/A" %></p>
@@ -21,8 +18,93 @@
       <p><strong>System Language:</strong> <%= user.systemLanguage %></p>
     </div>
 
-    <!-- Tabla de sesiones del usuario -->
-    <h5 class="mb-3">Sesiones registradas:</h5>
+    <!-- 🔢 Gráficas (2 por fila) -->
+    <div class="row mb-4">
+      <div class="col-md-6 mb-4">
+        <h5 class="text-primary">📊 Accuracy per Level</h5>
+        <canvas id="accuracyChart" height="100"></canvas>
+      </div>
+      <div class="col-md-6 mb-4">
+        <h5 class="text-primary">🕒 Session Duration</h5>
+        <canvas id="sessionDurationChart" height="100"></canvas>
+      </div>
+      <div class="col-md-6 mb-4">
+        <h5 class="text-primary">📅 Daily Activity</h5>
+        <canvas id="dailyActivityChart" height="100"></canvas>
+      </div>
+      <div class="col-md-6 mb-4">
+        <h5 class="text-primary">🧱 Score per Level</h5>
+        <canvas id="scoreChart" height="100"></canvas>
+      </div>
+    </div>
+
+    <!-- 🏆 Logros centrados -->
+    <h5 class="mt-5 mb-3 text-primary text-center">🏆 Achievements</h5>
+    <div class="d-flex flex-wrap justify-content-center gap-3 mb-5">
+      <% logrosData.forEach(l => { %>
+        <div class="card px-3 py-2 text-center" style="min-width: 150px; background-color: <%= l.obtenido ? '#e0ffe0' : '#f5f5f5' %>;">
+          <h6><%= l.nombre %></h6>
+          <p class="small"><%= l.descripcion %></p>
+          <span class="badge bg-<%= l.obtenido ? 'success' : 'secondary' %>">
+            <%= l.obtenido ? 'Obtained' : 'Pending' %>
+          </span>
+        </div>
+      <% }) %>
+    </div>
+
+    <!-- Leaderboard -->
+    <h5 class="mb-3 text-primary">🏅 Leaderboard Position</h5>
+    <% if (userLeaderboard) { %>
+      <p>Current ranking: <strong>#<%= position %></strong></p>
+      <table class="table table-hover text-center leaderboard-table">
+        <thead class="table-dark">
+          <tr>
+            <th>#</th>
+            <th>Username</th>
+            <th>Total Score</th>
+            <th>Total Time (s)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% leaderboard.forEach((u, i) => { %>
+            <tr class="<%= u.id_usuario === user.id_usuario ? 'table-primary fw-bold' : '' %>">
+              <td><%= i + 1 %></td>
+              <td><%= u.Username %></td>
+              <td><%= u.TotalScore %></td>
+              <td><%= u.TotalTime %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } else { %>
+      <p class="text-muted">This user is not yet on the leaderboard.</p>
+    <% } %>
+
+    <!-- Tabla de desempeño -->
+    <h5 class="mt-5 mb-3 text-primary">🧾 Performance by Level</h5>
+    <table class="table table-bordered">
+      <thead class="table-light">
+        <tr>
+          <th>Level</th>
+          <th>Score</th>
+          <th>% Accuracy</th>
+          <th>Time (s)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% performanceTable.forEach(p => { %>
+          <tr>
+            <td><%= p.nivel %></td>
+            <td><%= p.puntaje %></td>
+            <td><%= p.porcentaje_aciertos %>%</td>
+            <td><%= p.tiempo_finalizacion %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+
+    <!-- 📋 Sesiones -->
+    <h5 class="mt-5 mb-3 text-primary">📋 Registered Sessions</h5>
     <table class="table table-striped">
       <thead>
         <tr>
@@ -43,6 +125,67 @@
     </table>
   </main>
 
-  <!-- Footer -->
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    // 1. Accuracy per level
+    new Chart(document.getElementById('accuracyChart'), {
+      type: 'bar',
+      data: {
+        labels: <%- JSON.stringify(accuracyPerLevel.map(d => d.levelName)) %>,
+        datasets: [{
+          label: '% Accuracy',
+          data: <%- JSON.stringify(accuracyPerLevel.map(d => d.porcentaje_aciertos)) %>,
+          backgroundColor: 'rgba(54, 162, 235, 0.6)'
+        }]
+      },
+      options: { responsive: true, plugins: { legend: { display: false } } }
+    });
+
+    // 2. Session durations
+    new Chart(document.getElementById('sessionDurationChart'), {
+      type: 'line',
+      data: {
+        labels: <%- JSON.stringify(sessions.map(s => new Date(s.startTime).toLocaleDateString())) %>,
+        datasets: [{
+          label: 'Duration (min)',
+          data: <%- JSON.stringify(sessions.map(s => Math.round(s.duration_seconds / 60))) %>,
+          borderColor: 'rgba(75, 192, 192, 1)',
+          backgroundColor: 'rgba(75, 192, 192, 0.2)',
+          fill: true
+        }]
+      },
+      options: { responsive: true }
+    });
+
+    // 3. Daily activity
+    new Chart(document.getElementById('dailyActivityChart'), {
+      type: 'bar',
+      data: {
+        labels: <%- JSON.stringify(sessionsPerDay.map(d => d.date)) %>,
+        datasets: [{
+          label: 'Sessions per Day',
+          data: <%- JSON.stringify(sessionsPerDay.map(d => d.total)) %>,
+          backgroundColor: 'rgba(255, 159, 64, 0.6)'
+        }]
+      },
+      options: { responsive: true }
+    });
+
+    // 4. Score per level
+    new Chart(document.getElementById('scoreChart'), {
+      type: 'bar',
+      data: {
+        labels: <%- JSON.stringify(performanceTable.map(d => d.nivel)) %>,
+        datasets: [{
+          label: 'Score',
+          data: <%- JSON.stringify(performanceTable.map(d => d.puntaje)) %>,
+          backgroundColor: 'rgba(153, 102, 255, 0.6)'
+        }]
+      },
+      options: { responsive: true }
+    });
+  </script>
+
   <%- include('../partials/footer') %>
 </body>

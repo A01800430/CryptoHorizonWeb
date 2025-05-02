@@ -8,35 +8,103 @@
 
   <!-- Contenido principal -->
   <main class="container mt-5">
-    <!-- Título de la página -->
-    <h2 class="text-primary mb-4">All Users</h2>
+    <h2 class="text-primary mb-4">👥 All Users</h2>
 
-    <!-- Tabla de usuarios registrados -->
-    <table class="table table-hover table-striped">
-      <thead class="table-dark">
-        <tr>
-          <th>Username</th>
-          <th>Email</th>
-          <th>Country</th>
-          <th>Device</th>
-          <th>Language</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% users.forEach(user => { %>
-          <!-- Cada fila es clickeable y lleva al perfil individual del usuario -->
-          <tr onclick="window.location.href='/users/users/<%= user.id_usuario %>'" style="cursor: pointer;">
-            <td><%= user.userName %></td>
-            <td><%= user.email %></td>
-            <td><%= user.country %></td>
-            <td><%= user.deviceModel %></td>
-            <td><%= user.systemLanguage %></td>
-          </tr>
-        <% }) %>
-      </tbody>
-    </table>
+    <!-- 🧮 KPIs -->
+    <div class="row text-center mb-4">
+      <div class="col-md-4">
+        <div class="card shadow border-0">
+          <div class="card-body">
+            <h5 class="text-success">Total Users</h5>
+            <p class="fs-4 fw-bold"><%= totalUsers %></p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card shadow border-0">
+          <div class="card-body">
+            <h5 class="text-primary">New This Month</h5>
+            <p class="fs-4 fw-bold"><%= newUsers %></p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card shadow border-0">
+          <div class="card-body">
+            <h5 class="text-warning">Active This Month</h5>
+            <p class="fs-4 fw-bold"><%= activeUsers %></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 🔍 Filtros -->
+    <form method="get" class="row g-2 mb-4">
+      <!-- País -->
+      <div class="col-md-3">
+        <select name="country" class="form-select">
+          <option value="">🌍 Country</option>
+          <% countries.forEach(c => { %>
+            <option value="<%= c.country %>" <%= country === c.country ? 'selected' : '' %>><%= c.country %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <!-- Género -->
+      <div class="col-md-3">
+        <select name="gender" class="form-select">
+          <option value="">🚻 Gender</option>
+          <% genders.forEach(g => { %>
+            <option value="<%= g.gender %>" <%= gender === g.gender ? 'selected' : '' %>><%= g.gender %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <!-- Dispositivo -->
+      <div class="col-md-3">
+        <select name="device" class="form-select">
+          <option value="">💻 Device</option>
+          <% devices.forEach(d => { %>
+            <option value="<%= d.deviceModel %>" <%= device === d.deviceModel ? 'selected' : '' %>><%= d.deviceModel %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <!-- Botón -->
+      <div class="col-md-3">
+        <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+      </div>
+    </form>
+
+<!-- 📋 Tabla de usuarios -->
+<table class="table table-hover table-striped">
+  <thead class="table-dark">
+    <tr>
+      <th>#</th> <!-- Nueva columna -->
+      <th>Username</th>
+      <th>Email</th>
+      <th>Country</th>
+      <th>Gender</th>
+      <th>Device</th>
+      <th>Language</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% users.forEach((user, index) => { %>
+      <tr onclick="window.location.href='/users/users/<%= user.id_usuario %>'" style="cursor: pointer;">
+        <td><%= index + 1 %></td> <!-- Número de fila -->
+        <td><%= user.userName %></td>
+        <td><%= user.email %></td>
+        <td><%= user.country %></td>
+        <td><%= user.gender || 'N/A' %></td>
+        <td><%= user.deviceModel %></td>
+        <td><%= user.systemLanguage %></td>
+      </tr>
+    <% }) %>
+  </tbody>
+</table>
+
   </main>
 
-  <!-- Footer -->
   <%- include('../partials/footer') %>
 </body>
