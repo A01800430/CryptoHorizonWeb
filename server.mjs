@@ -1235,3 +1235,5 @@ app.use((req, res) => {
   const url = req.originalUrl;
   res.status(404).render('partials/not_found', { url });
 });
+
+
